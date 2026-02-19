@@ -97,13 +97,16 @@ public class AuthService {
     */
     private String createRefreshToken(User user) {
 
-        // Step 1 — Generate JWT refresh token
-        String refreshJwt = jwtUtil.generateRefreshToken(user.getEmail());
+        // Step 1 — Generate JWT refresh token (NEW METHOD)
+        String refreshJwt = jwtUtil.generateRefreshToken(
+                user.getId(),
+                user.getEmail()
+        );
 
-        // Step 2 — Extract tokenId from JWT
+        // Step 2 — Extract tokenId (jti)
         String tokenId = jwtUtil.extractTokenId(refreshJwt);
 
-        // Step 3 — Extract expiry from JWT
+        // Step 3 — Extract expiry
         LocalDateTime expiry = jwtUtil.extractExpiry(refreshJwt)
                 .toInstant()
                 .atZone(ZoneId.systemDefault())
@@ -129,9 +132,15 @@ public class AuthService {
      REFRESH ACCESS TOKEN
      ======================================
     */
+    /*
+ ======================================
+ REFRESH ACCESS TOKEN (ROTATION ENABLED)
+ ======================================
+*/
     @Transactional
-    public String refreshAccessToken(String refreshToken) {
+    public LoginResponseDto refreshAccessToken(String refreshToken) {
 
+        //  Validate JWT
         if (!jwtUtil.isTokenValid(refreshToken)) {
             throw new RuntimeException("Invalid refresh token");
         }
@@ -142,25 +151,45 @@ public class AuthService {
 
         String tokenId = jwtUtil.extractTokenId(refreshToken);
 
+        // Fetch DB token
         RefreshToken token = refreshTokenRepository.findByTokenId(tokenId)
                 .orElseThrow(() -> new RuntimeException("Refresh token not found"));
 
+        // Security checks
         if (token.isRevoked()) {
-            throw new RuntimeException("Token revoked");
+            throw new RuntimeException("Token already revoked");
         }
 
         if (token.getExpiryDate().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Token expired");
+            throw new RuntimeException("Refresh token expired");
         }
 
         User user = token.getUser();
 
-        return jwtUtil.generateAccessToken(
+        // ROTATE — revoke old token
+        token.setRevoked(true);
+        refreshTokenRepository.save(token);
+
+        // Create NEW refresh token
+        String newRefreshToken = createRefreshToken(user);
+
+        // Create new access token
+        String newAccessToken = jwtUtil.generateAccessToken(
+                user.getId(),
+                user.getEmail(),
+                user.getRole().name()
+        );
+
+        // Return BOTH tokens
+        return new LoginResponseDto(
+                newAccessToken,
+                newRefreshToken,
                 user.getId(),
                 user.getEmail(),
                 user.getRole().name()
         );
     }
+
 
 
     /*

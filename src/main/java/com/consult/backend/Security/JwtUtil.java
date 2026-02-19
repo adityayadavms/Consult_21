@@ -69,20 +69,22 @@ public class JwtUtil {
     =================================
    */
 
-    public String generateRefreshToken(String email) {
+    public String generateRefreshToken(Long userId, String email) {
 
         Date now = new Date();
         Date expiry = new Date(now.getTime() + refreshTokenExpiry);
 
         return Jwts.builder()
                 .subject(email)
+                .claim("userId", userId)
                 .claim("type", "REFRESH")
-                .id(UUID.randomUUID().toString())
+                .id(UUID.randomUUID().toString())   // jti (VERY IMPORTANT)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(secretKey)
                 .compact();
     }
+
 
     /*
      =================================
@@ -112,6 +114,15 @@ public class JwtUtil {
 
     public Date extractExpiry(String token) {
         return extractAllClaims(token).getExpiration();
+    }
+
+    public Long extractUserId(String token) {
+        return extractAllClaims(token).get("userId", Long.class);
+    }
+
+
+    public boolean isRefreshToken(String token) {
+        return "REFRESH".equals(extractTokenType(token));
     }
 
 

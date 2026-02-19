@@ -34,14 +34,15 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponseDto<String>> refresh(
+    public ResponseEntity<ApiResponseDto<LoginResponseDto>> refresh(
             @RequestBody RefreshTokenRequestDto dto
     ) {
         return ResponseUtil.success(
                 authService.refreshAccessToken(dto.getRefreshToken()),
-                "Access token refreshed"
+                "Token refreshed successfully"
         );
     }
+
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponseDto<Void>> logout(
@@ -55,9 +56,6 @@ public class AuthController {
         );
     }
 
-    @GetMapping("/test")
-    public String test() {
-        return "Protected API Working";
-    }
+
 
 }
