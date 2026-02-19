@@ -1,0 +1,52 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+  compression:
+    enabled: true
+
+  tomcat:
+    max-threads: 200
+    accept-count: 100
+
+spring:
+  application:
+    name: backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/Consult21
+    username: postgres
+    password: Adi@123
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: always
+
+# ======================
+# JWT CONFIG (TOP LEVEL)
+# ======================
+jwt:
+  secret: "o6C4pm3W7EfJynOURMj2G1yF/RZOsl/uHfcQpdi+F1A="
+  accessTokenExpiry: 900000
+  refreshTokenExpiry: 604800000
+
+# ======================
+# LOGGING CONFIG
+# ======================
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
+    com.consult.backend.Security: DEBUG
