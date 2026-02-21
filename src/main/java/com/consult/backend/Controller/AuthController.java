@@ -48,13 +48,12 @@ public class AuthController {
     public ResponseEntity<ApiResponseDto<Void>> logout(
             @RequestBody LogoutRequestDto dto
     ) {
-        authService.logout(dto.getRefreshToken());
+        authService.logout(dto.getAccessToken(), dto.getRefreshToken());
 
-        return ResponseUtil.success(
-                null,
-                "Logout successful"
-        );
+        return ResponseUtil.success(null, "Logout successful");
     }
+
+
 
 
 

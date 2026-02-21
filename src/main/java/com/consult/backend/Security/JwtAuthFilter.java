@@ -1,4 +1,5 @@
 package com.consult.backend.Security;
+import com.consult.backend.service.TokenBlacklistService;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,6 +23,9 @@ import java.io.IOException;
 public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
+
+    private final TokenBlacklistService blacklistService;
+
     @Qualifier("handlerExceptionResolver")
     private final HandlerExceptionResolver handlerExceptionResolver;
 
@@ -64,10 +68,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             String token = authHeader.substring(7);
 
+            //  CHECK REDIS BLACKLIST
+            if (blacklistService.isBlacklisted(token)) {
+                throw new JwtException("Token is blacklisted");
+            }
+
             // Validate token signature & expiry
             if (!jwtUtil.isTokenValid(token)) {
                 throw new JwtException("Invalid JWT token");
             }
+
+
 
             // Ensure token is ACCESS token
             String tokenType = jwtUtil.extractTokenType(token);

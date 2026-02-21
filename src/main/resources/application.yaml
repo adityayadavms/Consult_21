@@ -33,17 +33,22 @@ spring:
     init:
       mode: always
 
-# ======================
-# JWT CONFIG (TOP LEVEL)
-# ======================
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 6s
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 1
+
 jwt:
   secret: "o6C4pm3W7EfJynOURMj2G1yF/RZOsl/uHfcQpdi+F1A="
   accessTokenExpiry: 900000
   refreshTokenExpiry: 604800000
 
-# ======================
-# LOGGING CONFIG
-# ======================
 logging:
   level:
     org.hibernate.SQL: DEBUG
