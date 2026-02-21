@@ -116,14 +116,7 @@ public class JwtUtil {
         return extractAllClaims(token).getExpiration();
     }
 
-    public Long extractUserId(String token) {
-        return extractAllClaims(token).get("userId", Long.class);
-    }
 
-
-    public boolean isRefreshToken(String token) {
-        return "REFRESH".equals(extractTokenType(token));
-    }
 
 
     /*
