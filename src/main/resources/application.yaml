@@ -44,6 +44,19 @@ spring:
           max-idle: 5
           min-idle: 1
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: adityayadavdeveloper@gmail.com
+    password: hgku nggq vfbi ubcy
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+
 jwt:
   secret: "o6C4pm3W7EfJynOURMj2G1yF/RZOsl/uHfcQpdi+F1A="
   accessTokenExpiry: 900000

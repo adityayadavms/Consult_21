@@ -54,6 +54,32 @@ public class AuthController {
     }
 
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponseDto<Void>> forgotPassword(
+            @RequestBody ForgotPasswordRequestDto dto
+    ) {
+        authService.forgotPassword(dto.getEmail());
+
+        return ResponseUtil.success(null, "OTP sent to email");
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponseDto<Void>> verifyOtp(
+            @RequestBody VerifyOtpRequestDto dto
+    ) {
+        authService.verifyOtp(dto.getEmail(), dto.getOtp());
+
+        return ResponseUtil.success(null, "OTP verified");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponseDto<Void>> resetPassword(
+            @RequestBody ResetPasswordRequestDto dto
+    ) {
+        authService.resetPassword(dto.getEmail(), dto.getNewPassword());
+
+        return ResponseUtil.success(null, "Password reset successful");
+    }
 
 
 

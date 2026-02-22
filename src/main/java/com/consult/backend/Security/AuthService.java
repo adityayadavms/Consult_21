@@ -10,6 +10,8 @@ import com.consult.backend.entity.RefreshToken;
 import com.consult.backend.entity.User;
 import com.consult.backend.repository.RefreshTokenRepository;
 import com.consult.backend.repository.UserRepository;
+import com.consult.backend.service.EmailService;
+import com.consult.backend.service.RedisOtpService;
 import com.consult.backend.service.RedisSessionService;
 import com.consult.backend.service.TokenBlacklistService;
 import jakarta.transaction.Transactional;
@@ -36,6 +38,8 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final RedisLoginAttemptService loginAttemptService;
     private final RedisSessionService redisSessionService;
+    private final RedisOtpService redisOtpService;
+    private final EmailService emailService;
 
     /*
      ======================================
@@ -176,7 +180,7 @@ public class AuthService {
 
         refreshTokenRepository.save(refreshToken);
 
-        // ⭐ STORE IN REDIS
+        // STORE IN REDIS
         redisSessionService.storeSession(
                 tokenId,
                 sessionId,
@@ -288,6 +292,57 @@ public class AuthService {
         // DELETE REDIS SESSION
         redisSessionService.deleteSession(tokenId);
 
+    }
+
+    /*
+     ======================================
+     Forget Password
+     ======================================
+    */
+    public void forgotPassword(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email not registered"));
+
+        String otp = redisOtpService.generateOtp(email);
+
+        emailService.sendOtpEmail(email, otp);
+    }
+
+    /*
+     ======================================
+     Verify Otp
+     ======================================
+    */
+
+    public void verifyOtp(String email, String otp) {
+
+        boolean verified = redisOtpService.verifyOtp(email, otp);
+
+        if (!verified) {
+            throw new RuntimeException("Invalid or expired OTP");
+        }
+    }
+
+    /*
+     ======================================
+     Reset Password
+     ======================================
+    */
+    public void resetPassword(String email, String newPassword) {
+
+        if (!redisOtpService.isOtpVerified(email)) {
+            throw new RuntimeException("OTP not verified");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+
+        userRepository.save(user);
+
+        redisOtpService.clearVerification(email);
     }
 
 
