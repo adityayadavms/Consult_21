@@ -7,6 +7,6 @@ import java.util.Optional;
 
 public interface FormTemplateRepository extends JpaRepository<FormTemplate, Long> {
 
-    Optional<FormTemplate> findByCategoryId(Long categoryId);
+    Optional<FormTemplate>  findByCategoryIdAndActiveTrue(Long categoryId);
 
 }
