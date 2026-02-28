@@ -1,0 +1,54 @@
+[
+  {
+    "title": "Career",
+    "brief": "Growth, resume help, interview prep, and career transitions."
+  },
+  {
+    "title": "Education",
+    "brief": "Course selection, admissions, higher studies, scholarships."
+  },
+  {
+    "title": "Life",
+    "brief": "Life decisions, motivation, stress management and clarity."
+  },
+  {
+    "title": "Personal & Emotional Well-Being",
+    "brief": "Stress, burnout, confidence and emotional resilience."
+  },
+  {
+    "title": "Finance & Money Management",
+    "brief": "Budgeting, saving, investments and debt planning."
+  },
+  {
+    "title": "Business & Entrepreneurship",
+    "brief": "Startup advice, business model, and growth strategy."
+  },
+  {
+    "title": "Relationships & Family",
+    "brief": "Communication, conflict resolution and relationship support."
+  },
+  {
+    "title": "Legal & Documentation Guidance (Non-Legal)",
+    "brief": "Help with GST, MCA, Startup India forms and documentation."
+  },
+  {
+    "title": "Health & Fitness Guidance",
+    "brief": "Lifestyle, small routines, and fitness tips (non-medical)."
+  },
+  {
+    "title": "Self-Improvement & Motivation",
+    "brief": "Goal-setting, productivity, habit-building and discipline."
+  },
+  {
+    "title": "Technology & Digital Help",
+    "brief": "Using apps, online tools, remote-work tips, and digital safety."
+  },
+  {
+    "title": "Travel & Relocation",
+    "brief": "Study/work abroad planning, visas, budgets and checklists."
+  },
+  {
+    "title": "Government Schemes Help",
+    "brief": "Subsidies, MSME/startup schemes and help with applications."
+  }
+]

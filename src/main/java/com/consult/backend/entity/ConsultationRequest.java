@@ -1,17 +1,20 @@
 package com.consult.backend.entity;
 
 import com.consult.backend.entity.Entity.PaymentStatus;
+
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
+
 @Table(name = "consultation_requests",
         indexes = {
                 @Index(name = "idx_consult_user", columnList = "user_id"),
                 @Index(name = "idx_consult_category", columnList = "category_id")
         })
+
 @Getter
 @Setter
 @AllArgsConstructor

@@ -1,0 +1,684 @@
+/* 1️⃣ Tailwind comes first */
+@import "tailwindcss";
+
+/* 2️⃣ Global height fix (keep this) */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* =========================
+   DESIGN TOKENS
+========================= */
+:root {
+  --bg: #0f1720;
+  --card: #11141a;
+  --muted: #b7bdc4;
+  --accent: #ff6a00;
+
+  --radius: 12px;
+  --container: 1100px;
+}
+
+.poppins-extralight {
+  font-family: "Poppins", sans-serif;
+  font-weight: 200;
+  font-style: normal;
+}
+
+/* =========================
+   BASE STYLES
+========================= */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, Poppins, system-ui, sans-serif;
+  background: var(--bg);
+  color: #ffffff;
+}
+
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* =========================
+   HEADER / NAVBAR
+========================= */
+.site-header {
+  position: sticky;
+  top: 0;
+  font-style: poppins-extralight;
+  z-index: 100;
+  background: rgba(15, 23, 32, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+}
+
+/* Logo */
+.logo img {
+  width: 160px;
+  background: none;
+}
+
+/* Navigation */
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 35px;
+}
+
+.nav a {
+  color: #e5e7eb;
+  text-decoration: none;
+  font-weight: 500;
+  position: relative;
+}
+
+/* Hover underline effect */
+.nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -6px;
+  width: 0%;
+  height: 2px;
+  background: #ff6a00;
+  transition: width 0.2s ease;
+}
+
+.nav a:hover::after {
+  width: 100%;
+}
+
+/* Login Button */
+.btn-login {
+  padding: 11px 14px;
+  border: 1px solid #ff6a00;
+  border-radius: 10px;
+  color: #ff6a00;
+  font-weight: 600;
+}
+
+.btn-login:hover {
+  background: rgba(255, 106, 0, 0.1);
+}
+
+.profile-menu {
+  position: relative;
+}
+
+.profile-icon {
+  width: 40px;
+  height: 40px;
+  background: #ff6a00;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 50px;
+  width: 180px;
+  background: #111827;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.dropdown p {
+  padding: 10px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.dropdown p:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.logout {
+  color: #ff4d4f;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .nav {
+    display: none;
+  }
+
+  .hamburger {
+    display: block;
+  }
+}
+
+/* =========================
+   HERO SECTION (PREMIUM)
+========================= */
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.5fr 1.5fr;
+  gap: 80px;
+  padding: 20px 10px 64px;
+
+  align-items: stretch; /* ✅ THIS FIXES IT */
+}
+
+/* LEFT SIDE */
+.hero-left {
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+}
+
+.hero h1 {
+  font-size: clamp(42px, 5vw, 56px);
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.lead {
+  font-size: 18px;
+  color: var(--muted);
+  max-width: 520px;
+  margin-bottom: 32px;
+}
+
+/* =========================
+   BUTTON SYSTEM
+========================= */
+
+.btn-primary {
+  background: linear-gradient(135deg, #ff6a00, #ff8c42);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(255, 106, 0, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(255, 106, 0, 0.5);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 12px rgba(255, 106, 0, 0.25);
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 12px 24px;
+  border-radius: 12px;
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, border 0.15s ease;
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* CTA + STATS */
+.cta-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stats {
+  display: flex;
+  gap: 48px;
+}
+
+.stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stats strong {
+  font-size: 20px;
+}
+
+/* =========================
+   RIGHT SIDE — GLASS FORM CARD
+========================= */
+
+.hero-right {
+  width: 100%;
+  max-width: 430px;
+  margin-left: auto;
+
+  height: 100%; /* ✅ THIS IS THE FIX */
+
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+
+  padding: 32px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+}
+
+
+/* FORM TITLE */
+.hero-right h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 22px;
+  font-weight:600;
+}
+
+/* FORM LAYOUT */
+.hero-right label {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 15px;
+}
+
+/* INPUTS */
+.hero-right input,
+.hero-right textarea,
+.hero-right select {
+  margin-top: 10px;
+  padding: 15px 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0f1720;
+  color: white;
+  font-size: 14px;
+}
+
+/* SELECT ARROW SPACING FIX */
+.hero-right select {
+  padding-right: 40px;        /* ⬅ space for arrow */
+  appearance: none;           /* ⬅ remove native arrow styling */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: none;     /* ⬅ ensures clean look */
+}
+
+
+/* FOCUS EFFECT */
+.hero-right input:focus,
+.hero-right textarea:focus,
+.hero-right select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.25);
+}
+
+/* PRICE ROW */
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 16px 3px 20px;
+  font-size: 18px;
+}
+
+/* FORM ACTIONS */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* FOOTNOTE */
+.small {
+  margin-top: 18px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* MOBILE */
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 48px;
+    padding-top: 64px;
+  }
+
+  .hero-right {
+    margin-left: 0;
+    max-width: 100%;
+  }
+}
+
+/* =========================
+   SERVICES SECTION (PREMIUM)
+========================= */
+.services h2 {
+  font-size: 40px;
+  margin-bottom: 8px;
+  font-weight:600;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 18px;
+  margin-bottom: 40px;
+  max-width: 600px;
+}
+
+/* Responsive grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 35px;
+}
+
+/* Card */
+.card {
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 30px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hover lift */
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 35px 70px rgba(0, 0, 0, 0.7);
+}
+
+/* Title */
+.card h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 25px;
+}
+
+/* Description */
+.card p {
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 20px;
+  flex-grow: 1;
+  margin-bottom: 24px;
+}
+
+/* Card button */
+.card-btn {
+  align-self: flex-start;
+}
+
+/* Reuse main button styles */
+.card-btn {
+  background: linear-gradient(135deg, #ff6a00, #ff8c42);
+  border: none;
+  padding: 15px 25px;
+  border-radius: 10px;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(255, 106, 0, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(255, 106, 0, 0.5);
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 1000px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hero {
+    flex-direction: column;
+  }
+
+  .hero-right {
+    width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   ABOUT & STEPS SECTION
+========================= */
+/* Section spacing */
+.about {
+  margin-top: 40px;
+}
+
+/* SECTION HEADING (OUTSIDE CARD) */
+.about-heading {
+  font-size: 32px;
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+/* ABOUT CARD */
+.about-card {
+  max-width: 1300px;
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 40px;
+
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+}
+
+/* ABOUT TEXT */
+.about-card p {
+  font-size: 18px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin: 0; /* clean text block */
+}
+
+/* FAQ TITLE */
+.faq h2 {
+  font-size: 32px;
+  margin-bottom: 24px;
+  font-weight:600;
+}
+
+/* Steps Grid */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 24px;
+}
+
+/* Step Card */
+.step {
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 24px;
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.step:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
+}
+
+/* Step Number */
+.step span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;   /* <-- THIS FIXES THE CIRCLE */
+
+  background: rgba(255, 106, 0, 0.15);
+  color: var(--accent);
+  font-weight: 700;
+  border-radius: 50%;
+}
+
+/* Step Text */
+.step p {
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+  .about,
+  .faq {
+    margin-top: 64px;
+  }
+
+  .about-card {
+    padding: 28px;
+  }
+}
+
+/* =========================
+   FOOTER
+========================= */
+.site-footer {
+  margin-top: 120px;
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.site-footer .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32px 24px;
+  flex-wrap: wrap;
+}
+
+/* Left side */
+.footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer-left small {
+  color: var(--muted);
+}
+
+/* Footer nav links */
+.site-footer nav a {
+  color: #e5e7eb;
+  text-decoration: none;
+  margin-right: 10px;
+  font-size: 14px;
+  position: relative;
+}
+
+/* Hover underline animation */
+.site-footer nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 0%;
+  height: 1px;
+  background: var(--accent);
+  transition: width 0.2s ease;
+}
+
+.site-footer nav a:hover::after {
+  width: 100%;
+}
+
+/* Right side */
+.footer-right p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* First line: left aligned */
+.footer-right p:first-child {
+  text-align: left;
+  font-weight: 500;
+}
+
+/* Middle lines: normal (left) */
+.footer-right p:not(:first-child):not(:last-child) {
+  text-align: left;
+}
+
+/* Last line: right aligned */
+.footer-right p:last-child {
+  text-align: left;
+}
+
+
+/* Mobile */
+@media (max-width: 700px) {
+  .site-footer .container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .footer-right p {
+    text-align: left;
+  }
+}
+
+
