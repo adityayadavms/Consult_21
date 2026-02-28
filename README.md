@@ -132,6 +132,32 @@ All protected endpoints require a valid JWT token in the Authorization header:
 ```
 Authorization: Bearer <jwt_token>
 ```
+
+### Advanced Security Features
+
+#### 1. **Token Management**
+- **Access & Refresh Tokens**: Short-lived access tokens with refresh token rotation for enhanced security
+- **Refresh Token Rotation**: Tokens are automatically rotated on each refresh to minimize exposure window
+- **Token Blacklisting with Redis**: Revoked tokens are immediately invalidated and stored in Redis
+
+#### 2. **Brute Force Protection**
+- **Max Login Attempts**: Limited to 5 failed login attempts
+- **Account Lockout**: After exceeding max attempts, account is locked for **15 minutes**
+- **Prevents credential stuffing and brute force attacks**
+
+#### 3. **Session Management**
+- **Redis-backed Session Storage**: Centralized session management for consistent state
+- **Multi-tab Logout**: Logging out from one session automatically logs out from all other tabs/devices
+- **Real-time Session Invalidation**: Ensures compromised sessions are immediately revoked across all devices
+
+#### 4. **CORS Security**
+- **CORS Filter**: Configured to prevent unauthorized cross-origin requests
+- **Origin Whitelisting**: Only trusted domains can access the API
+
+#### 5. **Secure Password Reset**
+- **Forgot Password Feature**: Allows registered users to securely reset forgotten passwords
+- **Secure Token-based Reset**: Time-limited reset tokens prevent unauthorized password changes
+- **Email Verification**: Password reset links are sent to registered email addresses
 ## Configuration
 ### Application Properties
 Key configuration properties to be set in application.properties:
