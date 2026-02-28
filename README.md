@@ -142,7 +142,6 @@ server.port=8080
 server.servlet.context-path=/api
 
 # JWT Configuration
-jwt.secret=your_secret_key
 jwt.expiration=86400000
 
 # Email Configuration
