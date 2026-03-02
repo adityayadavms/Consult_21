@@ -68,3 +68,8 @@ logging:
     org.hibernate.orm.jdbc.bind: TRACE
     org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
     com.consult.backend.Security: DEBUG
+
+
+razorpay:
+  key: rzp_test_wXffuqFalQ
+  secret: hpyYedkwGyxq0LtM0IdSMxkEUNdyGYzv

@@ -9,13 +9,13 @@ import com.consult.backend.repository.CategoryRepository;
 import com.consult.backend.repository.ConsultationRequestRepository;
 import com.consult.backend.repository.FormTemplateRepository;
 import com.consult.backend.repository.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+
 
 @Service
 @AllArgsConstructor
@@ -24,7 +24,7 @@ public class ConsultationService {
     private final CategoryRepository categoryRepository;
     private final FormTemplateRepository formTemplateRepository;
     private final UserRepository userRepository;
-    private final ObjectMapper objectMapper;
+
 
     /*
      =========================================
@@ -63,41 +63,31 @@ public class ConsultationService {
         formTemplateRepository.findByCategoryIdAndActiveTrue(dto.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("No active template found"));
 
-        /*
-         =========================================
-         STEP 4 — CONVERT ANSWERS TO JSON STRING
-         =========================================
-        */
-        String answersJson;
-        try {
-            answersJson = objectMapper.writeValueAsString(dto.getAnswers());
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid answers format");
-        }
+
+
 
         /*
          =========================================
-         STEP 5 — CREATE ENTITY
+         STEP 4 — CREATE ENTITY
          =========================================
         */
         ConsultationRequest consultation = ConsultationRequest.builder()
                 .user(user)
                 .category(category)
-                .answersJson(answersJson)
-
-                .createdAt(LocalDateTime.now())
+                .answersJson(dto.getAnswers())
+                .amount(21)
                 .build();
 
         /*
          =========================================
-         STEP 6 — SAVE
+         STEP 5 — SAVE
          =========================================
         */
         consultationRequestRepository.save(consultation);
 
         /*
          =========================================
-         STEP 7 — RETURN RESPONSE
+         STEP 6 — RETURN RESPONSE
          =========================================
         */
         return SubmitConsultationResponseDto.builder()

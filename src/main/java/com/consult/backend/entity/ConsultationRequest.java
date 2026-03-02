@@ -2,10 +2,16 @@ package com.consult.backend.entity;
 
 import com.consult.backend.entity.Entity.PaymentStatus;
 
+
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.Map;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 
 @Entity
 
@@ -46,8 +52,12 @@ public class ConsultationRequest {
      ============================
     */
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb", nullable = false)
-    private String answersJson;
+    private Map<String, Object> answersJson;
+
+
+
 
     /*
      ============================
