@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class RazorPayService {
     private final RazorpayClient razorpayClient;
     private final ConsultationRequestRepository consultationRequestRepository;
+    private final EmailService emailService;
 
     @Value("${razorpay.key}")
     private String key;
@@ -206,8 +207,14 @@ public class RazorPayService {
         consultation.setRazorpayPaymentId(razorpayPaymentId);
 
         consultationRequestRepository.save(consultation);
+
+        /*
+        =========================================
+           SEND EMAIL NOTIFICATIONS
+        =========================================
+        */
+
+        emailService.sendPaymentSuccessNotification(consultation);
+        emailService.sendUserConsultationConfirmation(consultation);
     }
-
-
-
 }

@@ -73,3 +73,7 @@ logging:
 razorpay:
   key: rzp_test_wXffuqFalQ
   secret: hpyYedkwGyxq0LtM0IdSMxkEUNdyGYzv
+
+
+consult21:
+  admin-email: sumtyadav08@gmail.com
