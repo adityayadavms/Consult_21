@@ -95,3 +95,55 @@
   color: #ff6a00;
   cursor: pointer;
 }
+
+/* =========================
+   OTP INPUTS
+========================= */
+
+.otp-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.otp-input {
+  width: 50px;
+  height: 50px;
+  text-align: center;
+  font-size: 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: #0f1720;
+  color: white;
+}
+
+/* Focus highlight */
+
+.otp-input:focus {
+  outline: none;
+  border-color: #ff6a00;
+  box-shadow: 0 0 0 2px rgba(255,106,0,0.25);
+}
+
+
+/* =========================
+   RESEND OTP
+========================= */
+
+.otp-resend {
+  font-size: 13px;
+  color: #9ca3af;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.otp-resend span {
+  color: #ff6a00;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.otp-resend span:hover {
+  text-decoration: underline;
+}

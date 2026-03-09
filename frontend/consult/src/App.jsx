@@ -8,10 +8,10 @@ import Services from "./components/Services";
 import About from "./components/About";
 import HowItWorks from "./components/HowItWorks";
 import Footer from "./components/Footer";
-
+import VerifyOtp from "./Pages/VerifyOtp";
 import Login from "./Pages/Login";
 import Signup from "./Pages/SignUp";
-
+import ForgotPassword from "./Pages/ForgotPassword";
 import services from "./data/services.json";
 
 function HomePage() {
@@ -57,6 +57,24 @@ function App() {
             <Signup />
           </AuthLayout>
         }
+      />
+
+      <Route
+        path="/forgot-password"
+        element={
+        <AuthLayout>
+          <ForgotPassword />
+        </AuthLayout>
+        }
+      />
+
+      <Route
+      path="/verify-otp"
+      element={
+        <AuthLayout>
+          <VerifyOtp />
+        </AuthLayout>
+      }
       />
 
     </Routes>
