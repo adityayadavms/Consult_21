@@ -1,27 +1,56 @@
 import "./auth.css";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { verifyOtpApi } from "../api/passwordApi";
 
 function VerifyOtp() {
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const email = location.state?.email;
 
   const [otp, setOtp] = useState(["","","","","",""]);
   const [error, setError] = useState("");
+
+  /*
+  =================================
+  PROTECT ROUTE
+  =================================
+  */
+
+  useEffect(() => {
+    if (!email) {
+      navigate("/forgot-password");
+    }
+  }, [email, navigate]);
+
+  /*
+  =================================
+  HANDLE OTP INPUT
+  =================================
+  */
 
   const handleChange = (element, index) => {
 
     if (isNaN(element.value)) return;
 
-    let newOtp = [...otp];
+    const newOtp = [...otp];
     newOtp[index] = element.value;
+
     setOtp(newOtp);
 
-    if (element.nextSibling) {
+    if (element.value && element.nextSibling) {
       element.nextSibling.focus();
     }
 
   };
+
+  /*
+  =================================
+  VERIFY OTP
+  =================================
+  */
 
   const handleVerify = async () => {
 
@@ -34,13 +63,21 @@ function VerifyOtp() {
 
     try {
 
-      // verify otp API will go here
+      await verifyOtpApi(email, code);
 
-      navigate("/reset-password");
+      navigate("/reset-password", {
+        state: {
+          email,
+          otp: code
+        }
+      });
 
     } catch (err) {
 
-      setError("Invalid OTP");
+      setError(
+        err.response?.data?.message ||
+        "Invalid OTP"
+      );
 
     }
 
@@ -52,12 +89,14 @@ function VerifyOtp() {
 
         <h2>Verify OTP</h2>
 
-        <p style={{marginBottom:"20px",fontSize:"14px"}}>
+        <p style={{ marginBottom: "20px", fontSize: "14px" }}>
           Enter the 6-digit code sent to your email.
         </p>
 
         <div className="otp-container">
+
           {otp.map((data, index) => {
+
             return (
               <input
                 key={index}
@@ -65,13 +104,17 @@ function VerifyOtp() {
                 maxLength="1"
                 className="otp-input"
                 value={data}
-                onChange={e => handleChange(e.target, index)}
+                onChange={(e) => handleChange(e.target, index)}
               />
             );
+
           })}
+
         </div>
 
-        {error && <p className="auth-error">{error}</p>}
+        {error && (
+          <p className="auth-error">{error}</p>
+        )}
 
         <button
           className="auth-btn"
