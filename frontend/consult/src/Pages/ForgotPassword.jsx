@@ -2,12 +2,15 @@ import "./auth.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { forgotPasswordApi } from "../api/authApi";
+import { useResetPassword } from "../context/ResetPasswordContext";
 
 function ForgotPassword() {
 
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
+  const { setEmail } = useResetPassword();
+
+  const [email, setEmailInput] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -32,11 +35,10 @@ function ForgotPassword() {
       await forgotPasswordApi(email);
 
       /*
-      Store email temporarily
-      Used for OTP verification step
+      Store email in ResetPasswordContext
       */
 
-      sessionStorage.setItem("resetEmail", email);
+      setEmail(email);
 
       navigate("/verify-otp");
 
@@ -69,7 +71,7 @@ function ForgotPassword() {
           type="email"
           placeholder="Enter your email"
           value={email}
-          onChange={(e)=>setEmail(e.target.value)}
+          onChange={(e)=>setEmailInput(e.target.value)}
         />
 
         {error && (

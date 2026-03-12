@@ -4,11 +4,15 @@ import { BrowserRouter } from "react-router-dom";
 import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from "./context/AuthContext";
+import { ResetPasswordProvider } from "./context/ResetPasswordContext.jsx";
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
+        <ResetPasswordProvider>
+          <App />
+        </ResetPasswordProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,

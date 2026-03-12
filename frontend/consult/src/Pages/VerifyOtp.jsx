@@ -1,17 +1,23 @@
 import "./auth.css";
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { verifyOtpApi } from "../api/passwordApi";
+import { useResetPassword } from "../context/ResetPasswordContext";
 
 function VerifyOtp() {
 
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const email = location.state?.email;
+  const { email, setOtp } = useResetPassword();
 
-  const [otp, setOtp] = useState(["","","","","",""]);
+  const [otp, setOtpInput] = useState(["","","","","",""]);
   const [error, setError] = useState("");
+
+  const inputRefs = useRef([]);
+
+  const [timer, setTimer] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   /*
   =================================
@@ -20,10 +26,43 @@ function VerifyOtp() {
   */
 
   useEffect(() => {
+
     if (!email) {
       navigate("/forgot-password");
     }
+
   }, [email, navigate]);
+
+  /*
+  =================================
+  AUTO FOCUS FIRST INPUT
+  =================================
+  */
+
+  useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
+
+   /*
+  =================================
+  Setting Timer
+  =================================
+  */
+
+  useEffect(() => {
+
+  if (timer === 0) {
+    setCanResend(true);
+    return;
+  }
+
+  const interval = setInterval(() => {
+    setTimer((prev) => prev - 1);
+  }, 2000);
+
+  return () => clearInterval(interval);
+
+}, [timer]);
 
   /*
   =================================
@@ -38,11 +77,49 @@ function VerifyOtp() {
     const newOtp = [...otp];
     newOtp[index] = element.value;
 
-    setOtp(newOtp);
+    setOtpInput(newOtp);
 
-    if (element.value && element.nextSibling) {
-      element.nextSibling.focus();
+    if (element.value && index < 5) {
+      inputRefs.current[index + 1].focus();
     }
+
+  };
+
+  /*
+  =================================
+  BACKSPACE NAVIGATION
+  =================================
+  */
+
+  const handleKeyDown = (e, index) => {
+
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1].focus();
+    }
+
+  };
+
+  /*
+  =================================
+  PASTE OTP SUPPORT
+  =================================
+  */
+
+  const handlePaste = (e) => {
+
+    const paste = e.clipboardData.getData("text").trim();
+
+    if (!/^\d{6}$/.test(paste)) return;
+
+    const digits = paste.split("");
+
+    setOtpInput(digits);
+
+    digits.forEach((digit, index) => {
+      inputRefs.current[index].value = digit;
+    });
+
+    inputRefs.current[5].focus();
 
   };
 
@@ -65,12 +142,9 @@ function VerifyOtp() {
 
       await verifyOtpApi(email, code);
 
-      navigate("/reset-password", {
-        state: {
-          email,
-          otp: code
-        }
-      });
+      setOtp(code);
+
+      navigate("/reset-password");
 
     } catch (err) {
 
@@ -83,6 +157,38 @@ function VerifyOtp() {
 
   };
 
+  
+  /*
+  =================================
+  Reset Handler
+  =================================
+  */
+
+  const handleResend = async () => {
+
+  if (!canResend) return;
+
+  try {
+
+    setResendLoading(true);
+
+    await resendOtpApi(email);
+
+    setTimer(60);
+    setCanResend(false);
+
+  } catch (err) {
+
+    setError("Failed to resend OTP");
+
+  } finally {
+
+    setResendLoading(false);
+
+  }
+
+};
+
   return (
     <div className="auth-container">
       <div className="auth-card">
@@ -93,7 +199,10 @@ function VerifyOtp() {
           Enter the 6-digit code sent to your email.
         </p>
 
-        <div className="otp-container">
+        <div
+          className="otp-container"
+          onPaste={handlePaste}
+        >
 
           {otp.map((data, index) => {
 
@@ -104,7 +213,9 @@ function VerifyOtp() {
                 maxLength="1"
                 className="otp-input"
                 value={data}
+                ref={(el) => (inputRefs.current[index] = el)}
                 onChange={(e) => handleChange(e.target, index)}
+                onKeyDown={(e) => handleKeyDown(e, index)}
               />
             );
 
@@ -124,8 +235,25 @@ function VerifyOtp() {
         </button>
 
         <p className="otp-resend">
-          Didn't receive the code? <span>Resend OTP</span>
-        </p>
+
+         {canResend ? (
+
+          <span
+            onClick={handleResend}
+            style={{ cursor: "pointer", color: "#2563eb" }}
+          >
+           {resendLoading ? "Resending..." : "Resend OTP"}
+          </span>
+
+            ) : (
+
+              <span>
+                Resend in {timer}s
+              </span>
+
+            )}
+
+          </p>
 
       </div>
     </div>
