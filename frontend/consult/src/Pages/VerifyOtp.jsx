@@ -1,7 +1,7 @@
 import "./auth.css";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { verifyOtpApi, resendOtpApi } from "../api/passwordApi";
+import { verifyOtpApi, resendOtpApi } from "../api/authApi";
 import { useResetPassword } from "../context/ResetPasswordContext";
 
 const MAX_ATTEMPTS = 5;

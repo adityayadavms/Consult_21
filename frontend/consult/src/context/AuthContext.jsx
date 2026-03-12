@@ -12,6 +12,7 @@ export function AuthProvider({ children }) {
   */
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   /*
@@ -21,13 +22,26 @@ export function AuthProvider({ children }) {
   */
 
   useEffect(() => {
+
     const token = localStorage.getItem("accessToken");
 
     if (token) {
+
       setIsLoggedIn(true);
+
+      /*
+      Restore basic user info
+      (later we will fetch this from backend)
+      */
+
+      setUser({
+        name: "User"
+      });
+
     }
 
     setLoading(false);
+
   }, []);
 
   /*
@@ -37,6 +51,7 @@ export function AuthProvider({ children }) {
   */
 
   const login = async (email, password) => {
+
     try {
 
       await loginApi({
@@ -46,6 +61,15 @@ export function AuthProvider({ children }) {
 
       setIsLoggedIn(true);
 
+      /*
+      Store user info
+      */
+
+      setUser({
+        name: email.split("@")[0],
+        email
+      });
+
       return {
         success: true
       };
@@ -54,9 +78,13 @@ export function AuthProvider({ children }) {
 
       return {
         success: false,
-        message: error.response?.data?.message || "Login failed"
+        message:
+          error.response?.data?.message ||
+          "Login failed"
       };
+
     }
+
   };
 
   /*
@@ -70,6 +98,7 @@ export function AuthProvider({ children }) {
     logoutApi();
 
     setIsLoggedIn(false);
+    setUser(null);
 
   };
 
@@ -83,6 +112,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         isLoggedIn,
+        user,
         login,
         logout,
         loading

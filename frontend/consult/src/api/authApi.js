@@ -44,6 +44,35 @@ export const forgotPasswordApi = async (email) => {
 
 /*
 =============================
+VERIFY OTP
+=============================
+*/
+
+export const verifyOtpApi = async (email, otp) => {
+  const response = await axiosClient.post("/auth/verify-otp", {
+    email,
+    otp,
+  });
+
+  return response.data;
+};
+
+/*
+=============================
+RESEND OTP
+=============================
+*/
+
+export const resendOtpApi = async (email) => {
+  const response = await axiosClient.post("/auth/resend-otp", {
+    email,
+  });
+
+  return response.data;
+};
+
+/*
+=============================
 RESET PASSWORD
 =============================
 */
