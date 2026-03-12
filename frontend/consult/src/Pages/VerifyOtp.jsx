@@ -1,23 +1,31 @@
 import "./auth.css";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { verifyOtpApi } from "../api/passwordApi";
+import { verifyOtpApi, resendOtpApi } from "../api/passwordApi";
 import { useResetPassword } from "../context/ResetPasswordContext";
+
+const MAX_ATTEMPTS = 5;
+const LOCK_DURATION = 60;
 
 function VerifyOtp() {
 
   const navigate = useNavigate();
-
   const { email, setOtp } = useResetPassword();
 
   const [otp, setOtpInput] = useState(["","","","","",""]);
   const [error, setError] = useState("");
 
-  const inputRefs = useRef([]);
+  const [attempts, setAttempts] = useState(0);
+  const [locked, setLocked] = useState(false);
+  const [lockTimer, setLockTimer] = useState(0);
+
+  const [loading, setLoading] = useState(false);
 
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
+
+  const inputRefs = useRef([]);
 
   /*
   =================================
@@ -26,11 +34,9 @@ function VerifyOtp() {
   */
 
   useEffect(() => {
-
     if (!email) {
       navigate("/forgot-password");
     }
-
   }, [email, navigate]);
 
   /*
@@ -43,26 +49,55 @@ function VerifyOtp() {
     inputRefs.current[0]?.focus();
   }, []);
 
-   /*
+  /*
   =================================
-  Setting Timer
+  RESEND TIMER
   =================================
   */
 
   useEffect(() => {
 
-  if (timer === 0) {
-    setCanResend(true);
-    return;
-  }
+    if (timer === 0) {
+      setCanResend(true);
+      return;
+    }
 
-  const interval = setInterval(() => {
-    setTimer((prev) => prev - 1);
-  }, 2000);
+    const interval = setInterval(() => {
+      setTimer(prev => prev - 1);
+    }, 1000);
 
-  return () => clearInterval(interval);
+    return () => clearInterval(interval);
 
-}, [timer]);
+  }, [timer]);
+
+  /*
+  =================================
+  LOCK TIMER (OTP RATE LIMIT)
+  =================================
+  */
+
+  useEffect(() => {
+
+    if (!locked) return;
+
+    const interval = setInterval(() => {
+      setLockTimer(prev => {
+
+        if (prev <= 1) {
+          clearInterval(interval);
+          setLocked(false);
+          setAttempts(0);
+          return 0;
+        }
+
+        return prev - 1;
+
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+
+  }, [locked]);
 
   /*
   =================================
@@ -119,8 +154,6 @@ function VerifyOtp() {
       inputRefs.current[index].value = digit;
     });
 
-    inputRefs.current[5].focus();
-
   };
 
   /*
@@ -131,12 +164,17 @@ function VerifyOtp() {
 
   const handleVerify = async () => {
 
+    if (locked) return;
+
     const code = otp.join("");
 
     if (code.length !== 6) {
       setError("Please enter complete OTP");
       return;
     }
+
+    setLoading(true);
+    setError("");
 
     try {
 
@@ -153,41 +191,52 @@ function VerifyOtp() {
         "Invalid OTP"
       );
 
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+
+      if (newAttempts >= MAX_ATTEMPTS) {
+        setLocked(true);
+        setLockTimer(LOCK_DURATION);
+      }
+
+    } finally {
+
+      setLoading(false);
+
     }
 
   };
 
-  
   /*
   =================================
-  Reset Handler
+  RESEND OTP
   =================================
   */
 
   const handleResend = async () => {
 
-  if (!canResend) return;
+    if (!canResend) return;
 
-  try {
+    try {
 
-    setResendLoading(true);
+      setResendLoading(true);
 
-    await resendOtpApi(email);
+      await resendOtpApi(email);
 
-    setTimer(60);
-    setCanResend(false);
+      setTimer(60);
+      setCanResend(false);
 
-  } catch (err) {
+    } catch {
 
-    setError("Failed to resend OTP");
+      setError("Failed to resend OTP");
 
-  } finally {
+    } finally {
 
-    setResendLoading(false);
+      setResendLoading(false);
 
-  }
+    }
 
-};
+  };
 
   return (
     <div className="auth-container">
@@ -199,27 +248,23 @@ function VerifyOtp() {
           Enter the 6-digit code sent to your email.
         </p>
 
-        <div
-          className="otp-container"
-          onPaste={handlePaste}
-        >
+        <div className="otp-container" onPaste={handlePaste}>
 
-          {otp.map((data, index) => {
+          {otp.map((data, index) => (
 
-            return (
-              <input
-                key={index}
-                type="text"
-                maxLength="1"
-                className="otp-input"
-                value={data}
-                ref={(el) => (inputRefs.current[index] = el)}
-                onChange={(e) => handleChange(e.target, index)}
-                onKeyDown={(e) => handleKeyDown(e, index)}
-              />
-            );
+            <input
+              key={index}
+              type="text"
+              maxLength="1"
+              className="otp-input"
+              value={data}
+              ref={(el) => (inputRefs.current[index] = el)}
+              onChange={(e) => handleChange(e.target, index)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
+              disabled={locked}
+            />
 
-          })}
+          ))}
 
         </div>
 
@@ -227,33 +272,40 @@ function VerifyOtp() {
           <p className="auth-error">{error}</p>
         )}
 
+        {locked && (
+          <p className="auth-error">
+            Too many attempts. Try again in {lockTimer}s
+          </p>
+        )}
+
         <button
           className="auth-btn"
           onClick={handleVerify}
+          disabled={locked || loading || otp.join("").length !== 6}
         >
-          Verify OTP
+          {loading ? "Verifying..." : "Verify OTP"}
         </button>
 
         <p className="otp-resend">
 
-         {canResend ? (
+          {canResend ? (
 
-          <span
-            onClick={handleResend}
-            style={{ cursor: "pointer", color: "#2563eb" }}
-          >
-           {resendLoading ? "Resending..." : "Resend OTP"}
-          </span>
+            <span
+              onClick={handleResend}
+              style={{ cursor: "pointer", color: "#2563eb" }}
+            >
+              {resendLoading ? "Resending..." : "Resend OTP"}
+            </span>
 
-            ) : (
+          ) : (
 
-              <span>
-                Resend in {timer}s
-              </span>
+            <span>
+              Resend in {timer}s
+            </span>
 
-            )}
+          )}
 
-          </p>
+        </p>
 
       </div>
     </div>

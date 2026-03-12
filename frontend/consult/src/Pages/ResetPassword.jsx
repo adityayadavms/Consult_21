@@ -4,14 +4,36 @@ import { useNavigate } from "react-router-dom";
 import { resetPasswordApi } from "../api/passwordApi";
 import { useResetPassword } from "../context/ResetPasswordContext";
 
+/*
+=================================
+PASSWORD STRENGTH CALCULATOR
+=================================
+*/
+
+function calculatePasswordStrength(password) {
+
+  let score = 0;
+
+  if (password.length >= 8) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[a-z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+
+  if (score <= 2) return "Weak";
+  if (score <= 4) return "Medium";
+  return "Strong";
+}
+
 function ResetPassword() {
 
   const navigate = useNavigate();
-
   const { email, otp, clearResetState } = useResetPassword();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [strength, setStrength] = useState("");
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -47,16 +69,17 @@ function ResetPassword() {
       return;
     }
 
+    if (strength === "Weak") {
+      setError("Password is too weak");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
     try {
 
       await resetPasswordApi(email, otp, password);
-
-      /*
-      Clear reset flow state
-      */
 
       clearResetState();
 
@@ -70,8 +93,26 @@ function ResetPassword() {
       );
 
     } finally {
+
       setLoading(false);
+
     }
+
+  };
+
+  /*
+  =================================
+  PASSWORD INPUT HANDLER
+  =================================
+  */
+
+  const handlePasswordChange = (e) => {
+
+    const value = e.target.value;
+
+    setPassword(value);
+    setStrength(calculatePasswordStrength(value));
+    setError("");
 
   };
 
@@ -90,8 +131,24 @@ function ResetPassword() {
           className="auth-input"
           placeholder="New password"
           value={password}
-          onChange={(e)=>setPassword(e.target.value)}
+          onChange={handlePasswordChange}
         />
+
+        {password && (
+          <p
+            className="password-strength"
+            style={{
+              color:
+                strength === "Weak"
+                  ? "red"
+                  : strength === "Medium"
+                  ? "orange"
+                  : "green"
+            }}
+          >
+            Strength: <strong>{strength}</strong>
+          </p>
+        )}
 
         <input
           type="password"
@@ -108,7 +165,7 @@ function ResetPassword() {
         <button
           className="auth-btn"
           onClick={handleReset}
-          disabled={loading}
+          disabled={loading || strength === "Weak"}
         >
           {loading ? "Resetting..." : "Reset Password"}
         </button>
