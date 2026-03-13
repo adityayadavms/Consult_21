@@ -16,6 +16,7 @@ import com.consult.backend.service.RedisSessionService;
 import com.consult.backend.service.TokenBlacklistService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,6 +41,16 @@ public class AuthService {
     private final RedisSessionService redisSessionService;
     private final RedisOtpService redisOtpService;
     private final EmailService emailService;
+
+    private static final int MAX_RESEND_ATTEMPTS = 3;
+
+    private static final String RESEND_PREFIX = "otp:resend:";
+    private static final String COOLDOWN_PREFIX = "otp:cooldown:";
+
+    private static final Duration RESEND_WINDOW = Duration.ofMinutes(5);
+    private static final Duration COOLDOWN_TIME = Duration.ofSeconds(30);
+
+    private final RedisTemplate<String, Object> redisTemplate;
 
     /*
      ======================================
@@ -301,7 +312,7 @@ public class AuthService {
     */
     public void forgotPassword(String email) {
 
-        User user = userRepository.findByEmail(email)
+         userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Email not registered"));
 
         String otp = redisOtpService.generateOtp(email);
@@ -345,5 +356,76 @@ public class AuthService {
         redisOtpService.clearVerification(email);
     }
 
+    /*
+    ======================================
+    RESEND OTP
+    ======================================
+   */
+    public void resendOtp(String email) {
 
+    /*
+     STEP 1 — CHECK USER EXISTS
+    */
+        userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email not registered"));
+
+        String cooldownKey = COOLDOWN_PREFIX + email;
+        String resendKey = RESEND_PREFIX + email;
+
+    /*
+     STEP 2 — CHECK COOLDOWN (30s)
+    */
+
+        if (redisTemplate.hasKey(cooldownKey)) {
+            throw new RuntimeException("Please wait before requesting another OTP.");
+        }
+
+    /*
+     STEP 3 — CHECK RESEND LIMIT
+    */
+
+        Integer attempts = (Integer) redisTemplate.opsForValue().get(resendKey);
+
+        if (attempts != null && attempts >= MAX_RESEND_ATTEMPTS) {
+            throw new RuntimeException("Too many OTP requests. Try again later.");
+        }
+
+    /*
+     STEP 4 — INCREMENT RESEND COUNTER
+    */
+
+        Long newAttempts = redisTemplate.opsForValue().increment(resendKey);
+
+        if (newAttempts != null && newAttempts == 1) {
+            redisTemplate.expire(resendKey, RESEND_WINDOW);
+        }
+
+    /*
+     STEP 5 — DELETE OLD OTP
+    */
+
+        redisTemplate.delete("otp:" + email);
+
+    /*
+     STEP 6 — GENERATE NEW OTP
+    */
+
+        String otp = redisOtpService.generateOtp(email);
+
+    /*
+     STEP 7 — SEND EMAIL
+    */
+
+        emailService.sendOtpEmail(email, otp);
+
+    /*
+     STEP 8 — START COOLDOWN TIMER
+    */
+
+        redisTemplate.opsForValue().set(
+                cooldownKey,
+                "LOCKED",
+                COOLDOWN_TIME
+        );
+    }
 }
