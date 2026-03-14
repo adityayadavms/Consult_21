@@ -336,23 +336,42 @@ public class AuthService {
     }
 
     /*
-     ======================================
-     Reset Password
-     ======================================
-    */
+ ======================================
+ Reset Password
+ ======================================
+*/
     public void resetPassword(String email, String newPassword) {
 
+    /*
+     STEP 1 — CHECK OTP VERIFIED
+    */
         if (!redisOtpService.isOtpVerified(email)) {
             throw new RuntimeException("OTP not verified");
         }
 
+    /*
+     STEP 2 — FIND USER
+    */
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+    /*
+     STEP 3 — PREVENT USING CURRENT PASSWORD
+    */
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new RuntimeException("New password cannot be the same as the current password");
+        }
+
+    /*
+     STEP 4 — UPDATE PASSWORD
+    */
         user.setPassword(passwordEncoder.encode(newPassword));
 
         userRepository.save(user);
 
+    /*
+     STEP 5 — CLEAR OTP VERIFICATION
+    */
         redisOtpService.clearVerification(email);
     }
 
