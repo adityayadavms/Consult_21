@@ -35,4 +35,9 @@ public class Questions {
 
     // CREATED TIMESTAMP
     private LocalDateTime askedAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.askedAt = LocalDateTime.now();
+    }
 }

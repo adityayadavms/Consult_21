@@ -4,11 +4,9 @@ import com.consult.backend.dto.SubmitConsultationRequestDto;
 import com.consult.backend.dto.SubmitConsultationResponseDto;
 import com.consult.backend.entity.Category;
 import com.consult.backend.entity.ConsultationRequest;
+import com.consult.backend.entity.Questions;
 import com.consult.backend.entity.User;
-import com.consult.backend.repository.CategoryRepository;
-import com.consult.backend.repository.ConsultationRequestRepository;
-import com.consult.backend.repository.FormTemplateRepository;
-import com.consult.backend.repository.UserRepository;
+import com.consult.backend.repository.*;
 
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,7 +22,7 @@ public class ConsultationService {
     private final CategoryRepository categoryRepository;
     private final FormTemplateRepository formTemplateRepository;
     private final UserRepository userRepository;
-
+    private final QuestionsRepository questionsRepository;
 
     /*
      =========================================
@@ -34,11 +32,7 @@ public class ConsultationService {
     @Transactional
     public SubmitConsultationResponseDto submitConsultation(SubmitConsultationRequestDto dto) {
 
-        /*
-         =========================================
-         STEP 1 — GET LOGGED-IN USER
-         =========================================
-        */
+        // STEP 1 — USER
         String email = SecurityContextHolder
                 .getContext()
                 .getAuthentication()
@@ -47,30 +41,22 @@ public class ConsultationService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        /*
-         =========================================
-         STEP 2 — VALIDATE CATEGORY
-         =========================================
-        */
+        // STEP 2 — CATEGORY
         Category category = categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Invalid category"));
 
-        /*
-         =========================================
-         STEP 3 — VALIDATE TEMPLATE EXISTS
-         =========================================
-        */
+        // STEP 3 — TEMPLATE VALIDATION
         formTemplateRepository.findByCategoryIdAndActiveTrue(dto.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("No active template found"));
 
+        // STEP 4 — EXTRACT QUESTION
+        String questionText = (String) dto.getAnswers().get("question");
 
+        if (questionText == null || questionText.trim().isEmpty()) {
+            throw new RuntimeException("Question is required");
+        }
 
-
-        /*
-         =========================================
-         STEP 4 — CREATE ENTITY
-         =========================================
-        */
+        // STEP 5 — SAVE CONSULTATION
         ConsultationRequest consultation = ConsultationRequest.builder()
                 .user(user)
                 .category(category)
@@ -78,18 +64,17 @@ public class ConsultationService {
                 .amount(21)
                 .build();
 
-        /*
-         =========================================
-         STEP 5 — SAVE
-         =========================================
-        */
         consultationRequestRepository.save(consultation);
 
-        /*
-         =========================================
-         STEP 6 — RETURN RESPONSE
-         =========================================
-        */
+        // STEP 6 — SAVE QUESTION
+        Questions question = Questions.builder()
+                .question(questionText)
+                .user(user)
+                .build();
+
+        questionsRepository.save(question);
+
+        // STEP 7 — RESPONSE
         return SubmitConsultationResponseDto.builder()
                 .consultationId(consultation.getId())
                 .razorpayOrderId(null)
