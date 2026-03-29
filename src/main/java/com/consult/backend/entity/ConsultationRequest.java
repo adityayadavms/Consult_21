@@ -82,7 +82,12 @@ public class ConsultationRequest {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    @Column(length = 2000)
+    private String quickQuestion;
 
+    private String contactInfo;
+
+    private String name;
     /*
      ============================
      TimeStampHandling
