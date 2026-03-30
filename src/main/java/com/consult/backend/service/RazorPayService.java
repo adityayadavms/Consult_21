@@ -5,7 +5,7 @@ import com.consult.backend.dto.CreateOrderResponseDto;
 import com.consult.backend.entity.ConsultationRequest;
 import com.consult.backend.entity.Entity.PaymentStatus;
 import com.consult.backend.entity.Questions;
-import com.consult.backend.entity.User;
+
 import com.consult.backend.repository.ConsultationRequestRepository;
 import com.consult.backend.repository.QuestionsRepository;
 import com.razorpay.Order;
@@ -15,7 +15,7 @@ import com.razorpay.Utils;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -221,14 +221,17 @@ public class RazorPayService {
     */
         String questionText = extractQuestion(consultation);
 
-        if (!isDuplicateQuestion(consultation.getUser(), questionText)) {
+        Questions question = Questions.builder()
+                .question(questionText)
+                .user(consultation.getUser())
+                .consultation(consultation)
+                .build();
 
-            Questions question = Questions.builder()
-                    .question(questionText)
-                    .user(consultation.getUser())
-                    .build();
-
+        try {
             questionsRepository.save(question);
+        } catch (Exception e) {
+            //  This will happen if duplicate insert attempted
+            System.out.println("Question already exists for this consultation");
         }
 
 
@@ -275,10 +278,5 @@ public class RazorPayService {
         return questionText;
     }
 
-    private boolean isDuplicateQuestion(User user, String questionText) {
-        return questionsRepository
-                .findByUserOrderByAskedAtDesc(user, PageRequest.of(0,1))
-                .stream()
-                .anyMatch(q -> q.getQuestion().equals(questionText));
-    }
+
 }

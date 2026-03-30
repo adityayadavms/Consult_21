@@ -51,23 +51,43 @@ public class EmailService {
             message.setTo(adminEmail);
             message.setSubject("New Paid Consultation - ID: " + consultation.getId());
 
-            String answersText = formatAnswersForEmail(consultation.getAnswersJson());
+            String answersText;
 
-            message.setText(
-                    "A new consultation has been successfully booked.\n\n" +
+            if (consultation.getAnswersJson() != null) {
+                // Proper Consultation
+                answersText = formatAnswersForEmail(consultation.getAnswersJson());
+            } else {
+                // Quick Consultation
+                answersText = formatQuickConsultation(consultation);
+            }
 
-                            "Consultation ID: " + consultation.getId() + "\n" +
-                            "User Email: " + consultation.getUser().getEmail() + "\n" +
-                            "Category: " + consultation.getCategory().getName() + "\n" +
-                            "Amount Paid: ₹" + consultation.getAmount() + "\n" +
-                            "Payment ID: " + consultation.getRazorpayPaymentId() + "\n" +
-                            "Status: PAID\n\n" +
+            StringBuilder emailBody = new StringBuilder();
 
-                            "User Responses:\n" +
-                            "--------------------------\n" +
-                            answersText +
-                            "\n\nPlease review this consultation request."
-            );
+            emailBody.append("A new consultation has been successfully booked.\n\n")
+                    .append("Consultation ID: ").append(consultation.getId()).append("\n")
+                    .append("User Email (Account): ").append(consultation.getUser().getEmail()).append("\n");
+
+
+            if (consultation.getName() != null && !consultation.getName().trim().isEmpty()){
+                emailBody.append("Name: ").append(consultation.getName()).append("\n");
+            }
+
+            if (consultation.getContactInfo() != null) {
+                emailBody.append("Contact Info (User Input): ")
+                        .append(consultation.getContactInfo())
+                        .append("\n");
+            }
+
+            emailBody.append("Category: ").append(consultation.getCategory().getName()).append("\n")
+                    .append("Amount Paid: ₹").append(consultation.getAmount()).append("\n")
+                    .append("Payment ID: ").append(consultation.getRazorpayPaymentId()).append("\n")
+                    .append("Status: PAID\n\n")
+                    .append("User Responses:\n")
+                    .append("--------------------------\n")
+                    .append(answersText)
+                    .append("\n\nPlease review this consultation request.");
+
+            message.setText(emailBody.toString());
 
             mailSender.send(message);
 
@@ -76,6 +96,12 @@ public class EmailService {
         }
     }
 
+    private String formatQuickConsultation(ConsultationRequest consultation) {
+
+        return "Name : " + consultation.getName() + "\n" +
+                "Contact : " + consultation.getContactInfo() + "\n" +
+                "Question : " + consultation.getQuickQuestion() + "\n";
+    }
     /*
      =========================================
      USER CONFIRMATION EMAIL

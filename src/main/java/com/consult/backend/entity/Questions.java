@@ -32,6 +32,10 @@ public class Questions {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    // ✅ NEW FIELD
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "consultation_id", nullable = false, unique = true)
+    private ConsultationRequest consultation;
 
     // CREATED TIMESTAMP
     private LocalDateTime askedAt;
