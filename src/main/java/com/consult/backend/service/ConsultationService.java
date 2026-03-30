@@ -4,7 +4,7 @@ import com.consult.backend.dto.SubmitConsultationRequestDto;
 import com.consult.backend.dto.SubmitConsultationResponseDto;
 import com.consult.backend.entity.Category;
 import com.consult.backend.entity.ConsultationRequest;
-import com.consult.backend.entity.Questions;
+
 import com.consult.backend.entity.User;
 import com.consult.backend.repository.*;
 
@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 
 
 @Service
@@ -22,7 +23,7 @@ public class ConsultationService {
     private final CategoryRepository categoryRepository;
     private final FormTemplateRepository formTemplateRepository;
     private final UserRepository userRepository;
-    private final QuestionsRepository questionsRepository;
+
 
     /*
      =========================================
@@ -49,12 +50,8 @@ public class ConsultationService {
         formTemplateRepository.findByCategoryIdAndActiveTrue(dto.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("No active template found"));
 
-        // STEP 4 — EXTRACT QUESTION
-        String questionText = (String) dto.getAnswers().get("question");
-
-        if (questionText == null || questionText.trim().isEmpty()) {
-            throw new RuntimeException("Question is required");
-        }
+        // STEP 4 — Validate QUESTION
+        validateQuestion(dto.getAnswers());
 
         // STEP 5 — SAVE CONSULTATION
         ConsultationRequest consultation = ConsultationRequest.builder()
@@ -66,19 +63,21 @@ public class ConsultationService {
 
         consultationRequestRepository.save(consultation);
 
-        // STEP 6 — SAVE QUESTION
-        Questions question = Questions.builder()
-                .question(questionText)
-                .user(user)
-                .build();
 
-        questionsRepository.save(question);
 
-        // STEP 7 — RESPONSE
+        // STEP 6 — RESPONSE
         return SubmitConsultationResponseDto.builder()
                 .consultationId(consultation.getId())
                 .razorpayOrderId(null)
                 .amount(21)
                 .build();
+    }
+
+    private void validateQuestion(Map<String, Object> answers) {
+        String question = (String) answers.get("question");
+
+        if (question == null || question.trim().isEmpty()) {
+            throw new RuntimeException("Question is required");
+        }
     }
 }
