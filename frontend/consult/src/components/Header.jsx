@@ -75,13 +75,8 @@ function Header() {
           <a href="#home">Home</a>
           <a href="#about">About</a>
           <a href="#services">Services</a>
-
-          <button
-            className="btn-outline"
-            onClick={() => navigate("/consult")}
-          >
-            Consult Now
-          </button>
+          <a href="#about">About</a>
+         
           
           <div
               className="hamburger"
