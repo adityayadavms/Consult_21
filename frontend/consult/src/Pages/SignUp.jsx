@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./auth.css";
+import { signupApi } from "../api/authApi";
 
 function SignUp() {
   const navigate = useNavigate();
@@ -44,51 +45,54 @@ function SignUp() {
   /* =========================
      FORM SUBMIT
   ========================= */
-  const handleSubmit = (e) => {
-    e.preventDefault();
+      const handleSubmit = async (e) => {
+      e.preventDefault();
 
-    let newErrors = {};
+      let newErrors = {};
 
-    /* ---------- REQUIRED FIELD CHECK ---------- */
+      if (!form.email.trim()) {
+        newErrors.email = "Email is required";
+      }
 
-    if (!form.email.trim()) {
-      newErrors.email = "Email is required";
-    }
+      if (!form.password.trim()) {
+        newErrors.password = "Password is required";
+      }
 
-    if (!form.password.trim()) {
-      newErrors.password = "Password is required";
-    }
+      if (!form.confirmPassword.trim()) {
+        newErrors.confirm = "Confirm password is required";
+      }
 
-    if (!form.confirmPassword.trim()) {
-      newErrors.confirm = "Confirm password is required";
-    }
+      if (form.password) {
+        const passwordErrors = validatePassword(form.password);
+        newErrors = { ...newErrors, ...passwordErrors };
+      }
 
-    /* ---------- PASSWORD RULES ---------- */
+      if (
+        form.password &&
+        form.confirmPassword &&
+        form.password !== form.confirmPassword
+      ) {
+        newErrors.match = "Passwords do not match";
+      }
 
-    if (form.password) {
-      const passwordErrors = validatePassword(form.password);
-      newErrors = { ...newErrors, ...passwordErrors };
-    }
+      setErrors(newErrors);
 
-    /* ---------- PASSWORD MATCH ---------- */
+      if (Object.keys(newErrors).length > 0) return;
 
-    if (
-      form.password &&
-      form.confirmPassword &&
-      form.password !== form.confirmPassword
-    ) {
-      newErrors.match = "Passwords do not match";
-    }
+      try {
+        await signupApi({
+          email: form.email,
+          password: form.password,
+        });
 
-    setErrors(newErrors);
+        navigate("/login");
 
-    /* ---------- SUCCESS ---------- */
-
-    if (Object.keys(newErrors).length === 0) {
-      alert("Signup Successful 🎉");
-      navigate("/login");
-    }
-  };
+      } catch (err) {
+        alert(
+          err.response?.data?.message || "Signup failed"
+        );
+      }
+    };
 
   return (
     <div className="auth-container">

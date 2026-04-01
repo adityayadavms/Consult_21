@@ -1,7 +1,7 @@
-/* 1️⃣ Tailwind comes first */
+/*  Tailwind comes first */
 @import "tailwindcss";
 
-/* 2️⃣ Global height fix (keep this) */
+/*  Global height fix (keep this) */
 html,
 body,
 #root {
