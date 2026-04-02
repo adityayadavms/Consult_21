@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 import { loginApi, logoutApi } from "../api/authApi";
-
+import { getCurrentUserApi } from "../api/userApi";
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -21,28 +21,37 @@ export function AuthProvider({ children }) {
   =====================================
   */
 
-  useEffect(() => {
+      useEffect(() => {
+      const initAuth = async () => {
 
-    const token = localStorage.getItem("accessToken");
+        const token = localStorage.getItem("accessToken");
 
-    if (token) {
+        if (!token) {
+          setLoading(false);
+          return;
+        }
 
-      setIsLoggedIn(true);
+        try {
 
-      /*
-      Restore basic user info
-      (later we will fetch this from backend)
-      */
+          const userData = await getCurrentUserApi();
 
-      setUser({
-        name: "User"
-      });
+          setIsLoggedIn(true);
+          setUser(userData);
 
-    }
+        } catch (error) {
 
-    setLoading(false);
+          logoutApi();
+          setIsLoggedIn(false);
+          setUser(null);
 
-  }, []);
+        } finally {
+          setLoading(false);
+        }
+
+      };
+
+      initAuth();
+    }, []);
 
   /*
   =====================================
@@ -65,10 +74,8 @@ export function AuthProvider({ children }) {
       Store user info
       */
 
-      setUser({
-        name: email.split("@")[0],
-        email
-      });
+      const userData = await getCurrentUserApi();
+      setUser(userData);
 
       return {
         success: true

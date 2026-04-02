@@ -13,7 +13,7 @@ import Login from "./Pages/Login";
 import Signup from "./Pages/SignUp";
 import ForgotPassword from "./Pages/ForgotPassword";
 import services from "./data/services.json";
-
+import ProtectedRoute from "./routes/ProtectedRoute";
 function HomePage() {
   return (
     <>
@@ -76,7 +76,17 @@ function App() {
         </AuthLayout>
       }
       />
-
+      
+      <Route
+        path="/questions"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <h1>My Questions Page</h1>
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }
