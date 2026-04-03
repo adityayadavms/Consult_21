@@ -2,11 +2,12 @@ package com.consult.backend.Controller;
 
 import com.consult.backend.Security.AuthService;
 import com.consult.backend.dto.*;
+import com.consult.backend.entity.User;
 import com.consult.backend.util.ResponseUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.security.core.Authentication;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -90,6 +91,21 @@ public class AuthController {
         return ResponseUtil.success(null, "Password reset successful");
     }
 
+   @GetMapping("/me")
+    public ResponseEntity<ApiResponseDto<UserDto>> getCurrentUser(Authentication authentication){
+        User user= (User) authentication.getPrincipal();
 
+       UserDto userDto = UserDto.builder()
+               .id(user.getId())
+               .email(user.getEmail())
+               .name(user.getName())
+               .role(user.getRole().name())
+               .build();
+
+       return ResponseUtil.success(
+               userDto,
+               "User fetched successfully"
+       );
+   }
 
 }
