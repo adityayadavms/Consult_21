@@ -96,9 +96,15 @@ axiosClient.interceptors.response.use(
     ===============================
     */
 
-    if (error.response?.status !== 401) {
-      return Promise.reject(error);
-    }
+    if (
+        error.response?.status === 401 &&
+        error.response?.data?.message === "Token blacklisted"
+      ) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+
+        window.location.href = "/login";
+      }
 
     /*
     ===============================

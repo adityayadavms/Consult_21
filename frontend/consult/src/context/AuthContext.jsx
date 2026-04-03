@@ -21,7 +21,7 @@ export function AuthProvider({ children }) {
   =====================================
   */
 
-      useEffect(() => {
+    useEffect(() => {
       const initAuth = async () => {
 
         const token = localStorage.getItem("accessToken");
@@ -40,9 +40,11 @@ export function AuthProvider({ children }) {
 
         } catch (error) {
 
-          logoutApi();
-          setIsLoggedIn(false);
-          setUser(null);
+          if (error.response?.status === 401) {
+            logoutApi();
+            setIsLoggedIn(false);
+            setUser(null);
+          }
 
         } finally {
           setLoading(false);
@@ -53,6 +55,21 @@ export function AuthProvider({ children }) {
       initAuth();
     }, []);
 
+    useEffect(() => {
+      const syncLogout = (event) => {
+        if (event.key === "accessToken" && !event.newValue) {
+          setIsLoggedIn(false);
+          setUser(null);
+        }
+      };
+
+      window.addEventListener("storage", syncLogout);
+
+      return () => {
+        window.removeEventListener("storage", syncLogout);
+      };
+    }, []);
+
   /*
   =====================================
   LOGIN FUNCTION
@@ -60,39 +77,28 @@ export function AuthProvider({ children }) {
   */
 
   const login = async (email, password) => {
+  try {
 
-    try {
+    await loginApi({ email, password });
 
-      await loginApi({
-        email,
-        password
-      });
+    const userData = await getCurrentUserApi();
 
-      setIsLoggedIn(true);
+    setIsLoggedIn(true);
+    setUser(userData);
 
-      /*
-      Store user info
-      */
+    return { success: true };
 
-      const userData = await getCurrentUserApi();
-      setUser(userData);
+  } catch (error) {
 
-      return {
-        success: true
-      };
+    logoutApi();
 
-    } catch (error) {
-
-      return {
-        success: false,
-        message:
-          error.response?.data?.message ||
-          "Login failed"
-      };
-
-    }
-
-  };
+    return {
+      success: false,
+      message:
+        error.response?.data?.message || "Login failed"
+    };
+  }
+};
 
   /*
   =====================================
