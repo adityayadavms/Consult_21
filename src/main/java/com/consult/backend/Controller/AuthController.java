@@ -93,6 +93,7 @@ public class AuthController {
 
    @GetMapping("/me")
     public ResponseEntity<ApiResponseDto<UserDto>> getCurrentUser(Authentication authentication){
+
         User user= (User) authentication.getPrincipal();
 
        UserDto userDto = UserDto.builder()

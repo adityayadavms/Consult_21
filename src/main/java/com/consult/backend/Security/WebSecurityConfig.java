@@ -65,13 +65,23 @@ public class WebSecurityConfig {
                    //  Authorization rules
 
                    .authorizeHttpRequests(auth->auth
-                           .requestMatchers("/auth/**").permitAll()
+                           .requestMatchers(
+                                   "/auth/signup",
+                                   "/auth/login",
+                                   "/auth/refresh",
+                                   "/auth/forgot-password",
+                                   "/auth/resendOtp",
+                                   "/auth/verify-otp",
+                                   "/auth/reset-password"
+                           ).permitAll()
+
+                           .requestMatchers("/auth/me").authenticated()
 
                            .requestMatchers("/consultations/**").authenticated()
 
                            .requestMatchers("/user/**").hasRole("USER")
 
-                           .requestMatchers("/auth/me").authenticated()
+
 
                            .anyRequest().authenticated()
                    )
