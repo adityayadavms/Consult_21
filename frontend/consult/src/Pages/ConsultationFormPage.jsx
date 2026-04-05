@@ -8,7 +8,7 @@ import {
   verifyPaymentApi
 } from "../api/consultationApi";
 import { loadRazorpay } from "../utils/loadRazorpay";
-
+import { validateConsultation } from "../utils/validators";
 function ConsultationFormPage() {
 
   const { categoryId } = useParams();
@@ -42,7 +42,12 @@ function ConsultationFormPage() {
 
   const handleSubmit = async () => {
 
-    if (loading) return;
+     const error = validateConsultation(formData, formSchema);
+
+        if (error) {
+            toast.error(error);
+            return;
+        }
 
     try {
       setLoading(true);
@@ -108,9 +113,14 @@ function ConsultationFormPage() {
       rzp.open();
 
     } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong");
-      setLoading(false);
-    }
+
+            toast.error(
+            error.response?.data?.message ||
+            "Something went wrong"
+            );
+
+            setLoading(false);
+        }
   };
 
   if (loading) return <p>Loading form...</p>;
