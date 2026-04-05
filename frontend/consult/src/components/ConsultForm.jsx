@@ -36,56 +36,39 @@ function ConsultForm({ services }) {
   ===============================
   */
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      /*
-      ===============================
-      LOAD RAZORPAY
-      ===============================
-      */
-      const isLoaded = await loadRazorpay();
+    // 1. Load Razorpay
+    const isLoaded = await loadRazorpay();
 
-      if (!isLoaded) {
-        alert("Razorpay SDK failed to load");
-        return;
-      }
+    if (!isLoaded) {
+      alert("Razorpay SDK failed to load");
+      return;
+    }
 
-      /*
-      ===============================
-      CREATE ORDER (BACKEND)
-      ===============================
-      */
-      const data = await createQuickConsultationApi(form);
+    // 2. Create order (backend)
+    const data = await createQuickConsultationApi(form);
 
-      const {
-        consultationId,
-        razorpayOrderId,
-        amount
-      } = data;
+    const {
+      consultationId,
+      razorpayOrderId,
+      amount
+    } = data;
 
-      /*
-      ===============================
-      OPEN RAZORPAY CHECKOUT
-      ===============================
-      */
-      const options = {
-        key: "YOUR_RAZORPAY_KEY", // 🔥 replace with your test key
-        amount: amount,
-        currency: "INR",
-        name: "Consult21",
-        description: "Quick Consultation",
-        order_id: razorpayOrderId,
+    
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY,
+      amount: amount,
+      currency: "INR",
+      name: "Consult21",
+      description: "Quick Consultation",
+      order_id: razorpayOrderId,
 
-        handler: async function (response) {
-
-          /*
-          ===============================
-          VERIFY PAYMENT
-          ===============================
-          */
+      handler: async function (response) {
+        try {
           await verifyPaymentApi({
             consultationId,
             razorpayOrderId: response.razorpay_order_id,
@@ -93,34 +76,45 @@ function ConsultForm({ services }) {
             razorpaySignature: response.razorpay_signature
           });
 
-          alert("Payment successful! 🎉");
-        },
+          alert("Payment successful! ");
 
-        prefill: {
-          name: form.name,
-          email: form.contact
-        },
-
-        theme: {
-          color: "#ff6a00"
+        } catch (err) {
+          alert("Payment verification failed ");
         }
-      };
+      },
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      prefill: {
+        name: form.name,
+        email: form.contact
+      },
 
-    } catch (error) {
+      theme: {
+        color: "#ff6a00"
+      },
 
-      alert(
-        error.response?.data?.message ||
-        "Something went wrong"
-      );
+      modal: {
+        ondismiss: function () {
+          alert("Payment cancelled");
+        }
+      }
+    };
 
-    } finally {
-      setLoading(false);
-    }
-  };
+    // 4. Open Razorpay
+    const rzp = new window.Razorpay(options);
 
+    rzp.on("payment.failed", function (response) {
+      console.error("Payment Failed:", response.error);
+      alert(response.error.description || "Payment failed");
+    });
+
+    rzp.open();
+
+  } catch (error) {
+    alert(error.response?.data?.message || "Something went wrong");
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <form className="consult-form" onSubmit={handleSubmit}>
       <h3>Quick Consultation Form</h3>
