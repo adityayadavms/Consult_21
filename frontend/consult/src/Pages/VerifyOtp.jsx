@@ -1,6 +1,7 @@
 import "./auth.css";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast"; 
 import { verifyOtpApi, resendOtpApi } from "../api/authApi";
 import { useResetPassword } from "../context/ResetPasswordContext";
 
@@ -27,36 +28,15 @@ function VerifyOtp() {
 
   const inputRefs = useRef([]);
 
-  /*
-  =================================
-  PROTECT ROUTE
-  =================================
-  */
-
   useEffect(() => {
-    if (!email) {
-      navigate("/forgot-password");
-    }
+    if (!email) navigate("/forgot-password");
   }, [email, navigate]);
-
-  /*
-  =================================
-  AUTO FOCUS FIRST INPUT
-  =================================
-  */
 
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
 
-  /*
-  =================================
-  RESEND TIMER
-  =================================
-  */
-
   useEffect(() => {
-
     if (timer === 0) {
       setCanResend(true);
       return;
@@ -67,46 +47,27 @@ function VerifyOtp() {
     }, 1000);
 
     return () => clearInterval(interval);
-
   }, [timer]);
 
-  /*
-  =================================
-  LOCK TIMER (OTP RATE LIMIT)
-  =================================
-  */
-
   useEffect(() => {
-
     if (!locked) return;
 
     const interval = setInterval(() => {
       setLockTimer(prev => {
-
         if (prev <= 1) {
           clearInterval(interval);
           setLocked(false);
           setAttempts(0);
           return 0;
         }
-
         return prev - 1;
-
       });
     }, 1000);
 
     return () => clearInterval(interval);
-
   }, [locked]);
 
-  /*
-  =================================
-  HANDLE OTP INPUT
-  =================================
-  */
-
   const handleChange = (element, index) => {
-
     if (isNaN(element.value)) return;
 
     const newOtp = [...otp];
@@ -117,50 +78,26 @@ function VerifyOtp() {
     if (element.value && index < 5) {
       inputRefs.current[index + 1].focus();
     }
-
   };
 
-  /*
-  =================================
-  BACKSPACE NAVIGATION
-  =================================
-  */
-
   const handleKeyDown = (e, index) => {
-
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1].focus();
     }
-
   };
 
-  /*
-  =================================
-  PASTE OTP SUPPORT
-  =================================
-  */
-
   const handlePaste = (e) => {
-
     const paste = e.clipboardData.getData("text").trim();
 
     if (!/^\d{6}$/.test(paste)) return;
 
     const digits = paste.split("");
-
     setOtpInput(digits);
 
     digits.forEach((digit, index) => {
       inputRefs.current[index].value = digit;
     });
-
   };
-
-  /*
-  =================================
-  VERIFY OTP
-  =================================
-  */
 
   const handleVerify = async () => {
 
@@ -170,6 +107,7 @@ function VerifyOtp() {
 
     if (code.length !== 6) {
       setError("Please enter complete OTP");
+      toast.error("Enter complete OTP");
       return;
     }
 
@@ -180,16 +118,17 @@ function VerifyOtp() {
 
       await verifyOtpApi(email, code);
 
-      setOtp(code);
+      toast.success("OTP verified successfully");
 
+      setOtp(code);
       navigate("/reset-password");
 
     } catch (err) {
 
-      setError(
-        err.response?.data?.message ||
-        "Invalid OTP"
-      );
+      const msg = err.response?.data?.message || "Invalid OTP";
+
+      setError(msg);
+      toast.error(msg);
 
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
@@ -197,45 +136,33 @@ function VerifyOtp() {
       if (newAttempts >= MAX_ATTEMPTS) {
         setLocked(true);
         setLockTimer(LOCK_DURATION);
+        toast.error("Too many attempts. Try again later");
       }
 
     } finally {
-
       setLoading(false);
-
     }
-
   };
-
-  /*
-  =================================
-  RESEND OTP
-  =================================
-  */
 
   const handleResend = async () => {
 
     if (!canResend) return;
 
     try {
-
       setResendLoading(true);
 
       await resendOtpApi(email);
+
+      toast.success("OTP resent successfully");
 
       setTimer(60);
       setCanResend(false);
 
     } catch {
-
-      setError("Failed to resend OTP");
-
+      toast.error("Failed to resend OTP");
     } finally {
-
       setResendLoading(false);
-
     }
-
   };
 
   return (
@@ -249,9 +176,7 @@ function VerifyOtp() {
         </p>
 
         <div className="otp-container" onPaste={handlePaste}>
-
           {otp.map((data, index) => (
-
             <input
               key={index}
               type="text"
@@ -263,14 +188,10 @@ function VerifyOtp() {
               onKeyDown={(e) => handleKeyDown(e, index)}
               disabled={locked}
             />
-
           ))}
-
         </div>
 
-        {error && (
-          <p className="auth-error">{error}</p>
-        )}
+        {error && <p className="auth-error">{error}</p>}
 
         {locked && (
           <p className="auth-error">
@@ -287,24 +208,13 @@ function VerifyOtp() {
         </button>
 
         <p className="otp-resend">
-
           {canResend ? (
-
-            <span
-              onClick={handleResend}
-              style={{ cursor: "pointer", color: "#2563eb" }}
-            >
+            <span onClick={handleResend}>
               {resendLoading ? "Resending..." : "Resend OTP"}
             </span>
-
           ) : (
-
-            <span>
-              Resend in {timer}s
-            </span>
-
+            <span>Resend in {timer}s</span>
           )}
-
         </p>
 
       </div>

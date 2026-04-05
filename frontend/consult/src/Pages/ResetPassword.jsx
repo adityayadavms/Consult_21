@@ -1,17 +1,11 @@
 import "./auth.css";
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast"; 
 import { useNavigate } from "react-router-dom";
 import { resetPasswordApi } from "../api/authApi";
 import { useResetPassword } from "../context/ResetPasswordContext";
 
-/*
-=================================
-PASSWORD STRENGTH CALCULATOR
-=================================
-*/
-
 function calculatePasswordStrength(password) {
-
   let score = 0;
 
   if (password.length >= 8) score++;
@@ -37,40 +31,29 @@ function ResetPassword() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  /*
-  =================================
-  PROTECT ROUTE
-  =================================
-  */
-
   useEffect(() => {
-
     if (!email || !otp) {
       navigate("/forgot-password");
     }
-
   }, [email, otp, navigate]);
-
-  /*
-  =================================
-  HANDLE RESET PASSWORD
-  =================================
-  */
 
   const handleReset = async () => {
 
     if (!password || !confirmPassword) {
       setError("All fields are required");
+      toast.error("All fields are required");
       return;
     }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
 
     if (strength === "Weak") {
       setError("Password is too weak");
+      toast.error("Password is too weak");
       return;
     }
 
@@ -81,39 +64,29 @@ function ResetPassword() {
 
       await resetPasswordApi(email, otp, password);
 
-      clearResetState();
+      toast.success("Password reset successfully ");
 
+      clearResetState();
       navigate("/login");
 
     } catch (err) {
 
-      setError(
-        err.response?.data?.message ||
-        "Failed to reset password"
-      );
+      const msg =
+        err.response?.data?.message || "Failed to reset password";
+
+      setError(msg);
+      toast.error(msg);
 
     } finally {
-
       setLoading(false);
-
     }
-
   };
 
-  /*
-  =================================
-  PASSWORD INPUT HANDLER
-  =================================
-  */
-
   const handlePasswordChange = (e) => {
-
     const value = e.target.value;
-
     setPassword(value);
     setStrength(calculatePasswordStrength(value));
     setError("");
-
   };
 
   return (
@@ -158,9 +131,7 @@ function ResetPassword() {
           onChange={(e)=>setConfirmPassword(e.target.value)}
         />
 
-        {error && (
-          <p className="auth-error">{error}</p>
-        )}
+        {error && <p className="auth-error">{error}</p>}
 
         <button
           className="auth-btn"

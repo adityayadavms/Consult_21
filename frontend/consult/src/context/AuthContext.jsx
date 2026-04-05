@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect } from "react";
 import { loginApi, logoutApi } from "../api/authApi";
 import { getCurrentUserApi } from "../api/userApi";
+
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -21,54 +22,59 @@ export function AuthProvider({ children }) {
   =====================================
   */
 
-    useEffect(() => {
-      const initAuth = async () => {
+  useEffect(() => {
+    const initAuth = async () => {
 
-        const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem("accessToken");
 
-        if (!token) {
-          setLoading(false);
-          return;
-        }
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
-        try {
+      try {
 
-          const userData = await getCurrentUserApi();
+        const userData = await getCurrentUserApi();
 
-          setIsLoggedIn(true);
-          setUser(userData);
+        setIsLoggedIn(true);
+        setUser(userData);
 
-        } catch (error) {
+      } catch (error) {
 
-          if (error.response?.status === 401) {
-            logoutApi();
-            setIsLoggedIn(false);
-            setUser(null);
-          }
-
-        } finally {
-          setLoading(false);
-        }
-
-      };
-
-      initAuth();
-    }, []);
-
-    useEffect(() => {
-      const syncLogout = (event) => {
-        if (event.key === "accessToken" && !event.newValue) {
+        if (error.response?.status === 401) {
+          logoutApi();
           setIsLoggedIn(false);
           setUser(null);
         }
-      };
 
-      window.addEventListener("storage", syncLogout);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      return () => {
-        window.removeEventListener("storage", syncLogout);
-      };
-    }, []);
+    initAuth();
+  }, []);
+
+  /*
+  =====================================
+  MULTI-TAB LOGOUT SYNC
+  =====================================
+  */
+
+  useEffect(() => {
+    const syncLogout = (event) => {
+      if (event.key === "accessToken" && !event.newValue) {
+        setIsLoggedIn(false);
+        setUser(null);
+      }
+    };
+
+    window.addEventListener("storage", syncLogout);
+
+    return () => {
+      window.removeEventListener("storage", syncLogout);
+    };
+  }, []);
 
   /*
   =====================================
@@ -77,28 +83,28 @@ export function AuthProvider({ children }) {
   */
 
   const login = async (email, password) => {
-  try {
+    try {
 
-    await loginApi({ email, password });
+      await loginApi({ email, password });
 
-    const userData = await getCurrentUserApi();
+      const userData = await getCurrentUserApi();
 
-    setIsLoggedIn(true);
-    setUser(userData);
+      setIsLoggedIn(true);
+      setUser(userData);
 
-    return { success: true };
+      return { success: true };
 
-  } catch (error) {
+    } catch (error) {
 
-    logoutApi();
+      logoutApi();
 
-    return {
-      success: false,
-      message:
-        error.response?.data?.message || "Login failed"
-    };
-  }
-};
+      return {
+        success: false,
+        message:
+          error.response?.data?.message || "Login failed"
+      };
+    }
+  };
 
   /*
   =====================================
@@ -117,6 +123,16 @@ export function AuthProvider({ children }) {
 
   /*
   =====================================
+  UPDATE USER 
+  =====================================
+  */
+
+  const updateUser = (data) => {
+    setUser(data);
+  };
+
+  /*
+  =====================================
   CONTEXT PROVIDER
   =====================================
   */
@@ -128,7 +144,8 @@ export function AuthProvider({ children }) {
         user,
         login,
         logout,
-        loading
+        loading,
+        updateUser   
       }}
     >
       {children}

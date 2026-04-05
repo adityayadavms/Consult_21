@@ -1,4 +1,5 @@
 import "./auth.css";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
@@ -16,12 +17,6 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  /*
-  ================================
-  HANDLE LOGIN
-  ================================
-  */
-
   const handleLogin = async () => {
 
     setLoading(true);
@@ -33,11 +28,13 @@ function Login() {
 
     if (result.success) {
 
+      toast.success("Login successful ");
       navigate("/");
 
     } else {
 
       setError(result.message);
+      toast.error(result.message);
 
     }
   };
@@ -48,7 +45,6 @@ function Login() {
 
         <h2>Login</h2>
 
-        {/* EMAIL */}
         <input
           className="auth-input"
           type="email"
@@ -57,7 +53,6 @@ function Login() {
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        {/* PASSWORD */}
         <div className="password-field">
 
           <input
@@ -77,10 +72,8 @@ function Login() {
 
         </div>
 
-        {/* ERROR MESSAGE */}
         {error && <p className="auth-error">{error}</p>}
 
-        {/* FORGOT PASSWORD */}
         <p
           style={{
             fontSize: "13px",
@@ -93,7 +86,6 @@ function Login() {
           Forgot Password?
         </p>
 
-        {/* LOGIN BUTTON */}
         <button
           className="auth-btn"
           onClick={handleLogin}
@@ -102,7 +94,6 @@ function Login() {
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        {/* SIGNUP */}
         <p className="auth-link">
           New user?{" "}
           <span onClick={() => navigate("/signup")}>

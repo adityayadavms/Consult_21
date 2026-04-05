@@ -14,6 +14,7 @@ import Signup from "./Pages/SignUp";
 import ForgotPassword from "./Pages/ForgotPassword";
 import services from "./data/services.json";
 import ProtectedRoute from "./routes/ProtectedRoutes";
+import Profile from "./Pages/Profile";
 function HomePage() {
   return (
     <>
@@ -94,6 +95,18 @@ function App() {
           <ProtectedRoute>
             <MainLayout>
               <ConsultationFormPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      
+      
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <Profile />
             </MainLayout>
           </ProtectedRoute>
         }

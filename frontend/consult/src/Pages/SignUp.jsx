@@ -1,4 +1,5 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import "./auth.css";
 import { signupApi } from "../api/authApi";
@@ -14,16 +15,10 @@ function SignUp() {
 
   const [errors, setErrors] = useState({});
 
-  /* =========================
-     HANDLE INPUT CHANGE
-  ========================= */
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  /* =========================
-     PASSWORD VALIDATION FUNCTION
-  ========================= */
   const validatePassword = (password) => {
     const error = {};
 
@@ -42,57 +37,47 @@ function SignUp() {
     return error;
   };
 
-  /* =========================
-     FORM SUBMIT
-  ========================= */
-      const handleSubmit = async (e) => {
-      e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-      let newErrors = {};
+    let newErrors = {};
 
-      if (!form.email.trim()) {
-        newErrors.email = "Email is required";
-      }
+    if (!form.email.trim()) newErrors.email = "Email is required";
+    if (!form.password.trim()) newErrors.password = "Password is required";
+    if (!form.confirmPassword.trim()) newErrors.confirm = "Confirm password is required";
 
-      if (!form.password.trim()) {
-        newErrors.password = "Password is required";
-      }
+    if (form.password) {
+      const passwordErrors = validatePassword(form.password);
+      newErrors = { ...newErrors, ...passwordErrors };
+    }
 
-      if (!form.confirmPassword.trim()) {
-        newErrors.confirm = "Confirm password is required";
-      }
+    if (
+      form.password &&
+      form.confirmPassword &&
+      form.password !== form.confirmPassword
+    ) {
+      newErrors.match = "Passwords do not match";
+    }
 
-      if (form.password) {
-        const passwordErrors = validatePassword(form.password);
-        newErrors = { ...newErrors, ...passwordErrors };
-      }
+    setErrors(newErrors);
 
-      if (
-        form.password &&
-        form.confirmPassword &&
-        form.password !== form.confirmPassword
-      ) {
-        newErrors.match = "Passwords do not match";
-      }
+    if (Object.keys(newErrors).length > 0) return;
 
-      setErrors(newErrors);
+    try {
+      await signupApi({
+        email: form.email,
+        password: form.password,
+      });
 
-      if (Object.keys(newErrors).length > 0) return;
+      toast.success("Account created successfully ");
+      navigate("/login");
 
-      try {
-        await signupApi({
-          email: form.email,
-          password: form.password,
-        });
-
-        navigate("/login");
-
-      } catch (err) {
-        alert(
-          err.response?.data?.message || "Signup failed"
-        );
-      }
-    };
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Signup failed"
+      );
+    }
+  };
 
   return (
     <div className="auth-container">
@@ -100,7 +85,6 @@ function SignUp() {
         <h2 className="auth-title">Sign Up</h2>
 
         <form onSubmit={handleSubmit}>
-          {/* EMAIL */}
           <input
             className="auth-input"
             type="email"
@@ -110,7 +94,6 @@ function SignUp() {
           />
           {errors.email && <p className="auth-error">{errors.email}</p>}
 
-          {/* PASSWORD */}
           <input
             className="auth-input"
             type="password"
@@ -120,7 +103,6 @@ function SignUp() {
           />
           {errors.password && <p className="auth-error">{errors.password}</p>}
 
-          {/* PASSWORD RULE ERRORS */}
           {Object.values(errors)
             .filter(
               (msg) =>
@@ -133,12 +115,9 @@ function SignUp() {
                 ].includes(msg)
             )
             .map((msg, i) => (
-              <p key={i} className="auth-error">
-                {msg}
-              </p>
+              <p key={i} className="auth-error">{msg}</p>
             ))}
 
-          {/* CONFIRM PASSWORD */}
           <input
             className="auth-input"
             type="password"
@@ -146,10 +125,7 @@ function SignUp() {
             name="confirmPassword"
             onChange={handleChange}
           />
-          {errors.confirm && (
-            <p className="auth-error">{errors.confirm}</p>
-          )}
-
+          {errors.confirm && <p className="auth-error">{errors.confirm}</p>}
           {errors.match && <p className="auth-error">{errors.match}</p>}
 
           <button className="auth-btn">Create Account</button>
