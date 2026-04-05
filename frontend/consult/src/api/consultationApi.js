@@ -29,3 +29,32 @@ export const verifyPaymentApi = async (data) => {
 
   return response.data;
 };
+
+
+/*
+=====================================
+SUBMIT PROPER CONSULTATION
+=====================================
+*/
+export const submitConsultationApi = async (data) => {
+  const response = await axiosClient.post(
+    "/consultations",
+    data
+  );
+
+  return response.data;
+};
+
+/*
+=====================================
+CREATE PAYMENT ORDER
+=====================================
+*/
+export const createPaymentOrderApi = async (consultationId) => {
+  const response = await axiosClient.post(
+    "/payments/create-order",
+    { consultationId }
+  );
+
+  return response.data;
+};

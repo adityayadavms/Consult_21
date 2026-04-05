@@ -87,6 +87,17 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/consult/:categoryId"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ConsultationFormPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

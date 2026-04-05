@@ -1,27 +1,33 @@
 import services from "../data/services.json";
 import ServiceCard from "./ServiceCard";
+import { useNavigate } from "react-router-dom";
 
 function Services() {
-  const handleConsult = (category) => {
-    
-    const select = document.querySelector('select[name="category"]');
-    if (select) {
-      select.value = category;
-      window.location.hash = "#consult";
-    }
+
+  const navigate = useNavigate();
+
+  /*
+  ===============================
+  HANDLE CONSULT CLICK
+  ===============================
+  */
+  const handleConsult = (id, title) => {
+    navigate(`/consult/${id}`);
   };
 
   return (
     <section id="services" className="container services">
       <h2>Our Services</h2>
+
       <p className="subtitle">
         Choose from 13 expert consultation categories — all at ₹21 per consult.
       </p>
 
       <div className="grid">
-        {services.map((service, index) => (
+        {services.map((service) => (
           <ServiceCard
-            key={index}
+            key={service.id}
+            id={service.id}
             title={service.title}
             brief={service.brief}
             onConsult={handleConsult}

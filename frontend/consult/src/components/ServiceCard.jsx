@@ -1,4 +1,4 @@
-function ServiceCard({ title, brief, onConsult }) {
+function ServiceCard({ id, title, brief, onConsult }) {
   return (
     <div className="card">
       <h3>{title}</h3>
@@ -6,7 +6,7 @@ function ServiceCard({ title, brief, onConsult }) {
 
       <button
         className="card-btn"
-        onClick={() => onConsult(title)}
+        onClick={() => onConsult(id, title)}
       >
         Consult
       </button>

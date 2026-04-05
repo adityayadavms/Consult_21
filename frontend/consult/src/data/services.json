@@ -1,53 +1,66 @@
 [
   {
+    "id": 1,
     "title": "Career",
     "brief": "Growth, resume help, interview prep, and career transitions."
   },
   {
+    "id": 2,
     "title": "Education",
     "brief": "Course selection, admissions, higher studies, scholarships."
   },
   {
+    "id": 3,
     "title": "Life",
     "brief": "Life decisions, motivation, stress management and clarity."
   },
   {
+    "id": 4,
     "title": "Personal & Emotional Well-Being",
     "brief": "Stress, burnout, confidence and emotional resilience."
   },
   {
+    "id": 5,
     "title": "Finance & Money Management",
     "brief": "Budgeting, saving, investments and debt planning."
   },
   {
+    "id": 6,
     "title": "Business & Entrepreneurship",
     "brief": "Startup advice, business model, and growth strategy."
   },
   {
+    "id": 7,
     "title": "Relationships & Family",
     "brief": "Communication, conflict resolution and relationship support."
   },
   {
+    "id": 8,
     "title": "Legal & Documentation Guidance (Non-Legal)",
     "brief": "Help with GST, MCA, Startup India forms and documentation."
   },
   {
+    "id": 9,
     "title": "Health & Fitness Guidance",
     "brief": "Lifestyle, small routines, and fitness tips (non-medical)."
   },
   {
+    "id": 10,
     "title": "Self-Improvement & Motivation",
     "brief": "Goal-setting, productivity, habit-building and discipline."
   },
   {
+    "id": 11,
     "title": "Technology & Digital Help",
     "brief": "Using apps, online tools, remote-work tips, and digital safety."
   },
   {
+    "id": 12,
     "title": "Travel & Relocation",
     "brief": "Study/work abroad planning, visas, budgets and checklists."
   },
   {
+    "id": 13,
     "title": "Government Schemes Help",
     "brief": "Subsidies, MSME/startup schemes and help with applications."
   }
