@@ -1,16 +1,99 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
-import { verifyPhoneUpdateApi } from "../api/userApi";
+import { verifyPhoneUpdateApi, requestPhoneUpdateApi } from "../api/userApi";
 
-function OtpModal({ onClose, onSuccess }) {
+function OtpModal({ onClose, onSuccess, phone }) {
 
-  const [otp, setOtp] = useState("");
+  /*
+  ===============================
+  OTP STATE (ARRAY)
+  ===============================
+  */
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const inputRefs = useRef([]);
+
   const [loading, setLoading] = useState(false);
 
+  /*
+  ===============================
+  RESEND TIMER
+  ===============================
+  */
+  const [timer, setTimer] = useState(30);
+  const [canResend, setCanResend] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+
+  /*
+  ===============================
+  AUTO FOCUS FIRST INPUT
+  ===============================
+  */
+  useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
+
+  /*
+  ===============================
+  TIMER LOGIC
+  ===============================
+  */
+  useEffect(() => {
+
+    if (timer === 0) {
+      setCanResend(true);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setTimer(prev => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+
+  }, [timer]);
+
+  /*
+  ===============================
+  HANDLE INPUT
+  ===============================
+  */
+  const handleChange = (value, index) => {
+
+    if (isNaN(value)) return;
+
+    const newOtp = [...otp];
+    newOtp[index] = value;
+
+    setOtp(newOtp);
+
+    if (value && index < 5) {
+      inputRefs.current[index + 1].focus();
+    }
+  };
+
+  /*
+  ===============================
+  BACKSPACE HANDLING
+  ===============================
+  */
+  const handleKeyDown = (e, index) => {
+
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1].focus();
+    }
+  };
+
+  /*
+  ===============================
+  VERIFY OTP
+  ===============================
+  */
   const handleVerify = async () => {
 
-    if (otp.length !== 6) {
-      toast.error("Enter valid 6-digit OTP");
+    const code = otp.join("");
+
+    if (code.length !== 6) {
+      toast.error("Enter complete OTP");
       return;
     }
 
@@ -18,11 +101,11 @@ function OtpModal({ onClose, onSuccess }) {
 
       setLoading(true);
 
-      const updatedUser = await verifyPhoneUpdateApi(otp);
+      const updatedUser = await verifyPhoneUpdateApi(code);
 
       toast.success("Phone updated successfully");
 
-      onSuccess(updatedUser); // update context
+      onSuccess(updatedUser);
       onClose();
 
     } catch (err) {
@@ -37,22 +120,76 @@ function OtpModal({ onClose, onSuccess }) {
     }
   };
 
+  /*
+  ===============================
+  RESEND OTP
+  ===============================
+  */
+  const handleResend = async () => {
+
+    if (!canResend) return;
+
+    try {
+
+      setResendLoading(true);
+
+      await requestPhoneUpdateApi(phone);
+
+      toast.success("OTP resent");
+
+      setTimer(30);
+      setCanResend(false);
+
+    } catch {
+
+      toast.error("Failed to resend OTP");
+
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  /*
+  ===============================
+  MASK PHONE
+  ===============================
+  */
+  const maskPhone = (phone) => {
+    if (!phone) return "";
+    return phone.slice(0, 2) + "******" + phone.slice(-2);
+  };
+
   return (
     <div style={overlayStyle}>
       <div style={modalStyle}>
 
         <h3>Verify OTP</h3>
 
-        <input
-          type="text"
-          maxLength="6"
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
-          className="auth-input"
-          placeholder="Enter OTP"
-        />
+        <p style={{ marginBottom: "15px", fontSize: "14px" }}>
+          OTP sent to {maskPhone(phone)}
+        </p>
 
-        <div style={{ display: "flex", gap: "10px" }}>
+        {/* OTP INPUTS */}
+        <div className="otp-container">
+
+          {otp.map((digit, index) => (
+
+            <input
+              key={index}
+              maxLength="1"
+              value={digit}
+              ref={(el) => (inputRefs.current[index] = el)}
+              onChange={(e) => handleChange(e.target.value, index)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
+              className="otp-input"
+            />
+
+          ))}
+
+        </div>
+
+        {/* ACTION BUTTONS */}
+        <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
 
           <button
             className="btn-primary"
@@ -71,12 +208,29 @@ function OtpModal({ onClose, onSuccess }) {
 
         </div>
 
+        {/* RESEND */}
+        <p className="otp-resend" style={{ marginTop: "10px" }}>
+
+          {canResend ? (
+
+            <span onClick={handleResend}>
+              {resendLoading ? "Resending..." : "Resend OTP"}
+            </span>
+
+          ) : (
+
+            <span>Resend in {timer}s</span>
+
+          )}
+
+        </p>
+
       </div>
     </div>
   );
 }
 
-/* SIMPLE MODAL STYLES */
+/* STYLES */
 const overlayStyle = {
   position: "fixed",
   top: 0,
@@ -94,7 +248,7 @@ const modalStyle = {
   background: "#111827",
   padding: "25px",
   borderRadius: "15px",
-  width: "300px"
+  width: "320px"
 };
 
 export default OtpModal;
