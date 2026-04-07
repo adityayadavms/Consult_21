@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import MyQuestions from "./Pages/MyQuestions";
 import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
-
+import ConsultationFormPage from "./Pages/ConsultationFormPage";
 import HeroSection from "./components/HeroSection";
 import Services from "./components/Services";
 import About from "./components/About";

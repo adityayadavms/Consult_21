@@ -11,18 +11,17 @@ export function AuthProvider({ children }) {
   AUTH STATE
   =====================================
   */
-
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   /*
   =====================================
-  CHECK TOKEN ON APP LOAD
+  INIT AUTH (APP LOAD)
   =====================================
   */
-
   useEffect(() => {
+
     const initAuth = async () => {
 
       const token = localStorage.getItem("accessToken");
@@ -36,37 +35,41 @@ export function AuthProvider({ children }) {
 
         const userData = await getCurrentUserApi();
 
-        setIsLoggedIn(true);
         setUser(userData);
+        setIsLoggedIn(true);
 
       } catch (error) {
 
-        if (error.response?.status === 401) {
-          logoutApi();
-          setIsLoggedIn(false);
-          setUser(null);
-        }
+        // token invalid / expired
+        logoutApi();
+
+        setUser(null);
+        setIsLoggedIn(false);
 
       } finally {
         setLoading(false);
       }
+
     };
 
     initAuth();
+
   }, []);
 
   /*
   =====================================
-  MULTI-TAB LOGOUT SYNC
+  SYNC LOGOUT ACROSS TABS
   =====================================
   */
-
   useEffect(() => {
+
     const syncLogout = (event) => {
+
       if (event.key === "accessToken" && !event.newValue) {
         setIsLoggedIn(false);
         setUser(null);
       }
+
     };
 
     window.addEventListener("storage", syncLogout);
@@ -74,23 +77,24 @@ export function AuthProvider({ children }) {
     return () => {
       window.removeEventListener("storage", syncLogout);
     };
+
   }, []);
 
   /*
   =====================================
-  LOGIN FUNCTION
+  LOGIN
   =====================================
   */
-
   const login = async (email, password) => {
+
     try {
 
       await loginApi({ email, password });
 
       const userData = await getCurrentUserApi();
 
-      setIsLoggedIn(true);
       setUser(userData);
+      setIsLoggedIn(true);
 
       return { success: true };
 
@@ -103,40 +107,39 @@ export function AuthProvider({ children }) {
         message:
           error.response?.data?.message || "Login failed"
       };
+
     }
+
   };
 
   /*
   =====================================
-  LOGOUT FUNCTION
+  LOGOUT
   =====================================
   */
-
   const logout = () => {
 
     logoutApi();
 
-    setIsLoggedIn(false);
     setUser(null);
+    setIsLoggedIn(false);
 
   };
 
   /*
   =====================================
-  UPDATE USER 
+  UPDATE USER (IMPORTANT)
   =====================================
   */
-
   const updateUser = (data) => {
     setUser(data);
   };
 
   /*
   =====================================
-  CONTEXT PROVIDER
+  PROVIDER
   =====================================
   */
-
   return (
     <AuthContext.Provider
       value={{
@@ -144,8 +147,8 @@ export function AuthProvider({ children }) {
         user,
         login,
         logout,
-        loading,
-        updateUser   
+        updateUser,
+        loading
       }}
     >
       {children}

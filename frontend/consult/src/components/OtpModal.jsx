@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
-import { verifyPhoneUpdateApi, requestPhoneUpdateApi } from "../api/userApi";
+import { verifyPhoneUpdateApi, resendPhoneOtpApi } from "../api/userApi";
 
 function OtpModal({ onClose, onSuccess, phone }) {
 
@@ -125,29 +125,29 @@ function OtpModal({ onClose, onSuccess, phone }) {
   RESEND OTP
   ===============================
   */
-  const handleResend = async () => {
+      const handleResend = async () => {
 
-    if (!canResend) return;
+      if (!canResend) return;
 
-    try {
+      try {
 
-      setResendLoading(true);
+        setResendLoading(true);
 
-      await requestPhoneUpdateApi(phone);
+        await resendPhoneOtpApi(); // ✅ correct endpoint
 
-      toast.success("OTP resent");
+        toast.success("OTP resent");
 
-      setTimer(30);
-      setCanResend(false);
+        setTimer(30);
+        setCanResend(false);
 
-    } catch {
+      } catch {
 
-      toast.error("Failed to resend OTP");
+        toast.error("Failed to resend OTP");
 
-    } finally {
-      setResendLoading(false);
-    }
-  };
+      } finally {
+        setResendLoading(false);
+      }
+    };
 
   /*
   ===============================
