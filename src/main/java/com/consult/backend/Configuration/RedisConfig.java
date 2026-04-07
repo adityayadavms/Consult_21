@@ -7,6 +7,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import java.util.Map;
+
+
 @Configuration
 public class RedisConfig {
 
@@ -34,5 +37,25 @@ public class RedisConfig {
 
         return template;
     }
+
+    @Bean(name = "phoneRedisTemplate")
+    public RedisTemplate<String, Map<String, String>> phoneRedisTemplate(
+            RedisConnectionFactory connectionFactory
+    ) {
+        RedisTemplate<String, Map<String, String>> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+
+        // Key serializer
+        template.setKeySerializer(new StringRedisSerializer());
+
+        // Value serializer (JSON)
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+
+        template.afterPropertiesSet();
+
+        return template;
+    }
+
+
 
 }

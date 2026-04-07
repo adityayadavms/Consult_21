@@ -35,6 +35,9 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String name;
 
+    @Column(unique = true)
+    private String phone;
+
     // LOGIN IDENTITY
     @Column(nullable = false, unique = true)
     private String email;
@@ -73,20 +76,14 @@ public class User implements UserDetails {
         return email;
     }
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
+
 
     @Override
     public boolean isAccountNonLocked() {
         return accountNonLocked;
     }
 
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
+
 
     @Override
     public boolean isEnabled() {
