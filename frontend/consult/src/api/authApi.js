@@ -9,7 +9,7 @@ LOGIN
 export const loginApi = async (data) => {
   const response = await axiosClient.post("/auth/login", data);
 
-  const { accessToken, refreshToken } = response.data;
+  const { accessToken, refreshToken } = response.data.data;
 
   localStorage.setItem("accessToken", accessToken);
   localStorage.setItem("refreshToken", refreshToken);

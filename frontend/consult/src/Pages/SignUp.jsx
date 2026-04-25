@@ -9,6 +9,7 @@ function SignUp() {
 
   const [form, setForm] = useState({
     email: "",
+    name: "",
     password: "",
     confirmPassword: "",
   });
@@ -43,6 +44,7 @@ function SignUp() {
     let newErrors = {};
 
     if (!form.email.trim()) newErrors.email = "Email is required";
+    if (!form.name.trim()) newErrors.name = "Name is required";
     if (!form.password.trim()) newErrors.password = "Password is required";
     if (!form.confirmPassword.trim()) newErrors.confirm = "Confirm password is required";
 
@@ -66,6 +68,7 @@ function SignUp() {
     try {
       await signupApi({
         email: form.email,
+        name: form.name,
         password: form.password,
       });
 
@@ -93,6 +96,15 @@ function SignUp() {
             onChange={handleChange}
           />
           {errors.email && <p className="auth-error">{errors.email}</p>}
+           
+           <input
+              className="auth-input"
+              type="text"
+              placeholder="Enter name"
+              name="name"
+              onChange={handleChange}
+            />
+          {errors.name && <p className="auth-error">{errors.name}</p>}
 
           <input
             className="auth-input"
