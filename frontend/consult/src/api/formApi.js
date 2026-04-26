@@ -4,5 +4,8 @@ export const getFormTemplateApi = async (categoryId) => {
   const response = await axiosClient.get(
     `/categories/${categoryId}/form`
   );
-  return response.data;
+
+  console.log("AXIOS RAW:", response);
+
+  return response.data; // this is ApiResponseDto
 };

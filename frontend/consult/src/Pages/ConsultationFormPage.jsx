@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import toast from "react-hot-toast"; 
+import toast from "react-hot-toast";
 import { getFormTemplateApi } from "../api/formApi";
 import {
   submitConsultationApi,
@@ -9,6 +9,7 @@ import {
 } from "../api/consultationApi";
 import { loadRazorpay } from "../utils/loadRazorpay";
 import { validateConsultation } from "../utils/validators";
+
 function ConsultationFormPage() {
 
   const { categoryId } = useParams();
@@ -17,22 +18,38 @@ function ConsultationFormPage() {
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchForm = async () => {
-      try {
-        const res = await getFormTemplateApi(categoryId);
-        const schema = JSON.parse(res.schemaJson);
-        setFormSchema(schema.fields);
-      } catch {
-        toast.error("Failed to load form");
-      } finally {
-        setLoading(false);
+  // =============================
+  // FETCH FORM
+  // =============================
+        useEffect(() => {
+  const fetchForm = async () => {
+    try {
+      const res = await getFormTemplateApi(categoryId);
+
+      console.log("API RESPONSE:", res);
+
+      if (!res || !res.schemaJson) {
+        throw new Error("Invalid API response");
       }
-    };
 
-    fetchForm();
-  }, [categoryId]);
+      const schema = res.schemaJson;
 
+      setFormSchema(schema.sections || []);
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load form");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchForm();
+}, [categoryId]);
+
+  // =============================
+  // HANDLE CHANGE
+  // =============================
   const handleChange = (key, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -40,14 +57,93 @@ function ConsultationFormPage() {
     }));
   };
 
+  // =============================
+  // RENDER FIELD (CLEAN)
+  // =============================
+  const renderField = (field) => {
+    switch (field.type) {
+
+      case "text":
+      case "email":
+      case "number":
+        return (
+          <input
+            type={field.type}
+            value={formData[field.key] || ""}
+            onChange={(e) => handleChange(field.key, e.target.value)}
+          />
+        );
+
+      case "textarea":
+        return (
+          <textarea
+            value={formData[field.key] || ""}
+            onChange={(e) => handleChange(field.key, e.target.value)}
+          />
+        );
+
+      case "select":
+        return (
+          <select
+            value={formData[field.key] || ""}
+            onChange={(e) => handleChange(field.key, e.target.value)}
+          >
+            <option value="">Select</option>
+            {field.options?.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        );
+
+      case "multiselect":
+        return (
+          <select
+            multiple
+            value={formData[field.key] || []}
+            onChange={(e) =>
+              handleChange(
+                field.key,
+                Array.from(e.target.selectedOptions).map(o => o.value)
+              )
+            }
+          >
+            {field.options?.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        );
+
+      case "file":
+        return (
+          <input
+            type="file"
+            onChange={(e) => handleChange(field.key, e.target.files[0])}
+          />
+        );
+
+      default:
+        return <p>Unsupported field: {field.type}</p>;
+    }
+  };
+
+  // =============================
+  // SUBMIT
+  // =============================
   const handleSubmit = async () => {
 
-     const error = validateConsultation(formData, formSchema);
+    // flatten fields for validation
+    const allFields = formSchema.flatMap(section => section.fields);
 
-        if (error) {
-            toast.error(error);
-            return;
-        }
+    const error = validateConsultation(formData, allFields);
+
+    if (error) {
+      toast.error(error);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -86,7 +182,7 @@ function ConsultationFormPage() {
               razorpaySignature: response.razorpay_signature
             });
 
-            toast.success("Consultation submitted successfully ");
+            toast.success("Consultation submitted successfully");
 
           } catch {
             toast.error("Payment verification failed");
@@ -113,48 +209,38 @@ function ConsultationFormPage() {
       rzp.open();
 
     } catch (error) {
-
-            toast.error(
-            error.response?.data?.message ||
-            "Something went wrong"
-            );
-
-            setLoading(false);
-        }
+      toast.error(
+        error.response?.data?.message || "Something went wrong"
+      );
+      setLoading(false);
+    }
   };
 
+  // =============================
+  // UI
+  // =============================
   if (loading) return <p>Loading form...</p>;
+
+  if (!formSchema.length) {
+    return <p>No form available</p>;
+  }
 
   return (
     <div className="container">
       <h2>Consultation Form</h2>
 
-      {formSchema.map((field) => (
-        <div key={field.key} style={{ marginBottom: "15px" }}>
-          <label>{field.label}</label>
+      {formSchema.map((section) => (
+        <div key={section.section} style={{ marginBottom: "25px" }}>
 
-          {field.type === "text" && (
-            <input
-              type="text"
-              onChange={(e) => handleChange(field.key, e.target.value)}
-            />
-          )}
+          <h3>{section.section}</h3>
 
-          {field.type === "textarea" && (
-            <textarea
-              onChange={(e) => handleChange(field.key, e.target.value)}
-            />
-          )}
+          {section.fields.map((field) => (
+            <div key={field.key} style={{ marginBottom: "15px" }}>
+              <label>{field.label}</label>
+              {renderField(field)}
+            </div>
+          ))}
 
-          {field.type === "select" && (
-            <select
-              onChange={(e) => handleChange(field.key, e.target.value)}
-            >
-              {field.options.map((opt) => (
-                <option key={opt}>{opt}</option>
-              ))}
-            </select>
-          )}
         </div>
       ))}
 
