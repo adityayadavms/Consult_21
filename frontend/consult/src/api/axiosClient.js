@@ -1,5 +1,14 @@
 import axios from "axios";
+/*
+=====================================
+CLEAR AUTH DATA
+=====================================
+*/
 
+function clearAuthData() {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+}
 /*
 =====================================
 MAIN AXIOS INSTANCE
@@ -88,23 +97,36 @@ axiosClient.interceptors.response.use(
 
   async (error) => {
 
-    const originalRequest = error.config;
+    const originalRequest = error.config || {};
 
     /*
     ===============================
-    NOT AUTH ERROR
+    HANDLE BLACKLISTED TOKEN
     ===============================
     */
 
     if (
-        error.response?.status === 401 &&
-        error.response?.data?.message === "Token blacklisted"
-      ) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+      error.response?.status === 401 &&
+      error.response?.data?.message === "Token blacklisted"
+    ) {
 
-        window.location.href = "/login";
-      }
+      clearAuthData();
+
+      return Promise.reject(error);
+    }
+
+    /*
+    ===============================
+    ONLY HANDLE AUTH ERRORS
+    ===============================
+    */
+
+    const isAuthError =
+      error.response?.status === 401;
+
+    if (!isAuthError) {
+      return Promise.reject(error);
+    }
 
     /*
     ===============================
@@ -126,10 +148,7 @@ axiosClient.interceptors.response.use(
 
     if (!refreshToken) {
 
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-
-      window.location.href = "/login";
+      clearAuthData();
 
       return Promise.reject(error);
     }
@@ -146,7 +165,8 @@ axiosClient.interceptors.response.use(
 
         subscribeTokenRefresh((newToken) => {
 
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          originalRequest.headers.Authorization =
+            `Bearer ${newToken}`;
 
           resolve(axiosClient(originalRequest));
 
@@ -172,8 +192,10 @@ axiosClient.interceptors.response.use(
         { refreshToken }
       );
 
-      const newAccessToken = response.data.accessToken;
-      const newRefreshToken = response.data.refreshToken;
+      const {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken
+      } = response.data.data;
 
       /*
       ===============================
@@ -181,8 +203,15 @@ axiosClient.interceptors.response.use(
       ===============================
       */
 
-      localStorage.setItem("accessToken", newAccessToken);
-      localStorage.setItem("refreshToken", newRefreshToken);
+      localStorage.setItem(
+        "accessToken",
+        newAccessToken
+      );
+
+      localStorage.setItem(
+        "refreshToken",
+        newRefreshToken
+      );
 
       /*
       ===============================
@@ -198,7 +227,8 @@ axiosClient.interceptors.response.use(
       ===============================
       */
 
-      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+      originalRequest.headers.Authorization =
+        `Bearer ${newAccessToken}`;
 
       return axiosClient(originalRequest);
 
@@ -208,14 +238,11 @@ axiosClient.interceptors.response.use(
 
       /*
       ===============================
-      REFRESH FAILED → LOGOUT
+      REFRESH FAILED
       ===============================
       */
 
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-
-      window.location.href = "/login";
+      clearAuthData();
 
       return Promise.reject(refreshError);
 

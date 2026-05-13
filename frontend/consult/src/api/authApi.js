@@ -14,7 +14,7 @@ export const loginApi = async (data) => {
   localStorage.setItem("accessToken", accessToken);
   localStorage.setItem("refreshToken", refreshToken);
 
-  return response.data;
+  return response.data.data;
 };
 /*
 =============================

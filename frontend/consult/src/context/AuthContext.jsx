@@ -1,6 +1,7 @@
-import { createContext, useState, useEffect } from "react";
-import { loginApi, logoutApi } from "../api/authApi";
+import { createContext, useState, useEffect,useRef } from "react";
+import { loginApi, logoutApi,refreshTokenApi } from "../api/authApi";
 import { getCurrentUserApi } from "../api/userApi";
+import {getRefreshTimeout} from "../utils/jwt";
 
 export const AuthContext = createContext();
 
@@ -14,6 +15,85 @@ export function AuthProvider({ children }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+      /*
+      =====================================
+      CLEAR REFRESH TIMER
+      =====================================
+      */
+
+    const clearRefreshTimer = () => {
+
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
+
+    };
+    /*
+    =====================================
+    START SILENT REFRESH TIMER
+    =====================================
+    */
+
+    const startRefreshTimer = (accessToken) => {
+
+      clearRefreshTimer();
+
+      const timeout =
+        getRefreshTimeout(accessToken);
+
+      /*
+      token already expired
+      */
+
+      if (timeout <= 0) {
+        return;
+      }
+
+      refreshTimerRef.current = setTimeout(
+        async () => {
+
+          try {
+
+            /*
+            =============================
+            SILENT REFRESH
+            =============================
+            */
+
+            const data =
+              await refreshTokenApi();
+
+            /*
+            =============================
+            RESTART TIMER
+            =============================
+            */
+
+            startRefreshTimer(
+              data.accessToken
+            );
+
+          }
+
+          catch {
+
+            /*
+            =============================
+            REFRESH FAILED
+            =============================
+            */
+
+            logout();
+
+          }
+
+        },
+
+        timeout
+      );
+
+    };
 
   /*
   =====================================
@@ -30,13 +110,14 @@ export function AuthProvider({ children }) {
         setLoading(false);
         return;
       }
-
+      const refreshTimerRef = useRef(null);
       try {
 
         const userData = await getCurrentUserApi();
 
         setUser(userData);
         setIsLoggedIn(true);
+        startRefreshTimer(token);
 
       } catch (error) {
 
@@ -89,7 +170,12 @@ export function AuthProvider({ children }) {
 
     try {
 
-      await loginApi({ email, password });
+      const authData =
+        await loginApi({ email, password });
+
+      startRefreshTimer(
+        authData.accessToken
+      );
 
       const userData = await getCurrentUserApi();
 
@@ -118,7 +204,7 @@ export function AuthProvider({ children }) {
   =====================================
   */
   const logout = () => {
-
+    clearRefreshTimer();
     logoutApi();
 
     setUser(null);
@@ -134,7 +220,20 @@ export function AuthProvider({ children }) {
   const updateUser = (data) => {
     setUser(data);
   };
+   
+  /*
+  =====================================
+  CLEANUP TIMER
+  =====================================
+  */
 
+    useEffect(() => {
+
+      return () => {
+        clearRefreshTimer();
+      };
+
+    }, []);
   /*
   =====================================
   PROVIDER
