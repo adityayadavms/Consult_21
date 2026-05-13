@@ -1,0 +1,169 @@
+/* Container */
+.consult-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+/* Card */
+.consult-card {
+  background: #0f172a;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* Title */
+.consult-title {
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 25px;
+  color: #ffffff;
+}
+
+/* Section */
+.consult-section {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #1f2937;
+}
+
+/* Section Heading */
+.consult-section h3 {
+  font-size: 18px;
+  margin-bottom: 15px;
+  color: #f97316;
+}
+
+/* Field */
+.consult-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+/* Label */
+.consult-field label {
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #cbd5f5;
+}
+
+/* Inputs */
+.consult-field input,
+.consult-field textarea,
+.consult-field select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #1f2937;
+  background: #020617;
+  color: white;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s;
+}
+
+.consult-field input:focus,
+.consult-field textarea:focus,
+.consult-field select:focus {
+  border-color: #f97316;
+}
+
+/* Textarea */
+.consult-field textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* Button */
+.consult-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(to right, #f97316, #fb923c);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.consult-btn:hover {
+  opacity: 0.9;
+}
+
+.consult-btn:disabled {
+  background: #374151;
+  cursor: not-allowed;
+}
+
+/* Loading */
+.consult-loading {
+  text-align: center;
+  margin-top: 50px;
+  color: #cbd5f5;
+}
+
+
+/* HEADER */
+.consult-header {
+  
+  top: 0;
+  z-index: 50;
+
+  background: rgba(5, 6, 23, 0.5);
+  backdrop-filter: blur(10px);
+
+  border-bottom: 1px solid #1f2937;
+  padding: 25px 24px;
+}
+
+/* INNER LAYOUT */
+.consult-header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* BACK BUTTON */
+.back-btn {
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+
+  color: #f97316;
+  font-size: 15px;
+
+  width: 80px;
+  height: 40px;
+
+  border-radius: 10px;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+  background: #f97316;
+  color: white;
+  transform: translateX(-2px);
+}
+
+/* LOGO CENTER */
+.consult-logo {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+
+  font-size: 20px;
+  font-weight: 600;
+  
+  letter-spacing: 0.5px;
+}
+

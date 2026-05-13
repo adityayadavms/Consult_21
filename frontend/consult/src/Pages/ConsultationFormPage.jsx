@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { getFormTemplateApi } from "../api/formApi";
+import "./consultation.css";
 import {
   submitConsultationApi,
   createPaymentOrderApi,
@@ -219,36 +220,47 @@ function ConsultationFormPage() {
   // =============================
   // UI
   // =============================
-  if (loading) return <p>Loading form...</p>;
+  if (loading) return <p className="consult-loading">Loading form...</p>;
 
-  if (!formSchema.length) {
-    return <p>No form available</p>;
-  }
+if (!formSchema.length) {
+  return <p className="consult-loading">No form available</p>;
+}
 
-  return (
-    <div className="container">
-      <h2>Consultation Form</h2>
+return (
+  <div className="consult-container">
+    <div className="consult-card">
+
+      <h2 className="consult-title">Consultation Form</h2>
 
       {formSchema.map((section) => (
-        <div key={section.section} style={{ marginBottom: "25px" }}>
+        <div key={section.section} className="consult-section">
 
           <h3>{section.section}</h3>
 
           {section.fields.map((field) => (
-            <div key={field.key} style={{ marginBottom: "15px" }}>
+            <div key={field.key} className="consult-field">
+
               <label>{field.label}</label>
+
               {renderField(field)}
+
             </div>
           ))}
 
         </div>
       ))}
 
-      <button onClick={handleSubmit} disabled={loading}>
+      <button
+        className="consult-btn"
+        onClick={handleSubmit}
+        disabled={loading}
+      >
         {loading ? "Processing..." : "Submit Consultation"}
       </button>
+
     </div>
-  );
+  </div>
+);
 }
 
 export default ConsultationFormPage;

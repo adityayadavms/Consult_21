@@ -1,4 +1,4 @@
-import axiosClient from "./axiosClient";
+import axiosClient, { refreshClient } from "./axiosClient";
 
 /*
 =============================
@@ -16,7 +16,75 @@ export const loginApi = async (data) => {
 
   return response.data;
 };
+/*
+=============================
+REFRESH TOKEN
+=============================
+*/
 
+export const refreshTokenApi = async () => {
+
+  /*
+  =============================
+  GET CURRENT REFRESH TOKEN
+  =============================
+  */
+
+  const refreshToken = localStorage.getItem("refreshToken");
+
+  if (!refreshToken) {
+    throw new Error("No refresh token found");
+  }
+
+  /*
+  =============================
+  CALL REFRESH ENDPOINT
+  IMPORTANT:
+  Use refreshClient
+  (NO INTERCEPTORS)
+  =============================
+  */
+
+  const response = await refreshClient.post(
+    "/auth/refresh",
+    { refreshToken }
+  );
+
+  /*
+  =============================
+  EXTRACT ROTATED TOKENS
+  =============================
+  */
+
+  const {
+    accessToken,
+    refreshToken: newRefreshToken
+  } = response.data.data;
+
+  /*
+  =============================
+  STORE NEW TOKENS
+  =============================
+  */
+
+  localStorage.setItem(
+    "accessToken",
+    accessToken
+  );
+
+  localStorage.setItem(
+    "refreshToken",
+    newRefreshToken
+  );
+
+  /*
+  =============================
+  RETURN FULL DATA
+  =============================
+  */
+
+  return response.data.data;
+};
 /*
 =============================
 SIGNUP

@@ -15,6 +15,7 @@ import ForgotPassword from "./Pages/ForgotPassword";
 import services from "./data/services.json";
 import ProtectedRoute from "./routes/ProtectedRoutes";
 import Profile from "./Pages/Profile";
+import ConsultationLayout from "./layouts/ConsultationLayout";
 function HomePage() {
   return (
     <>
@@ -89,13 +90,13 @@ function App() {
         }
       />
 
-      <Route
+          <Route
         path="/consult/:categoryId"
         element={
           <ProtectedRoute>
-            <MainLayout>
+            <ConsultationLayout>
               <ConsultationFormPage />
-            </MainLayout>
+            </ConsultationLayout>
           </ProtectedRoute>
         }
       />

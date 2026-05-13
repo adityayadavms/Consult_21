@@ -5,7 +5,7 @@ export const getFormTemplateApi = async (categoryId) => {
     `/categories/${categoryId}/form`
   );
 
-  console.log("AXIOS RAW:", response);
+ 
 
   return response.data; // this is ApiResponseDto
 };

@@ -75,7 +75,7 @@ function Header() {
           <a href="#home">Home</a>
           <a href="#about">About</a>
           <a href="#services">Services</a>
-          <a href="#about">About</a>
+          <a href="#faq">How it Works</a>
          
           
           <div
