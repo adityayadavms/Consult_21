@@ -15,6 +15,7 @@ export function AuthProvider({ children }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const refreshTimerRef = useRef(null);
 
       /*
       =====================================
@@ -110,7 +111,7 @@ export function AuthProvider({ children }) {
         setLoading(false);
         return;
       }
-      const refreshTimerRef = useRef(null);
+      
       try {
 
         const userData = await getCurrentUserApi();

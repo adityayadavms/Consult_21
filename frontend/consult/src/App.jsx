@@ -16,6 +16,11 @@ import services from "./data/services.json";
 import ProtectedRoute from "./routes/ProtectedRoutes";
 import Profile from "./Pages/Profile";
 import ConsultationLayout from "./layouts/ConsultationLayout";
+
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsConditions from "./pages/TermsConditions";
+import RefundPolicy from "./pages/RefundPolicy";
+
 function HomePage() {
   return (
     <>
@@ -112,6 +117,22 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route 
+      path="/privacy-policy" 
+      element={<PrivacyPolicy />} 
+      />
+
+      <Route 
+      path="/terms" 
+      element={<TermsConditions />} 
+      />
+
+      <Route 
+      path="/refund-policy" 
+      element={<RefundPolicy />} 
+      />
+
     </Routes>
   );
 }

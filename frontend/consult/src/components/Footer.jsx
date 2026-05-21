@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";  
 function Footer() {
   return (
     <footer className="site-footer">
@@ -7,9 +8,9 @@ function Footer() {
           <small>© 2025 Consult21</small>
 
           <nav>
-            <a href="#">Privacy Policy</a> ·{" "}
-            <a href="#">Terms</a> ·{" "}
-            <a href="#">Refund Policy</a>
+           <Link to="/privacy-policy">Privacy Policy</Link> ·{" "}
+            <Link to="/terms">Terms</Link> ·{" "}
+            <Link to="/refund-policy">Refund Policy</Link>
           </nav>
         </div>
 
