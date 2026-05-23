@@ -1,7 +1,8 @@
 import { createContext, useState, useEffect,useRef } from "react";
 import { loginApi, logoutApi,refreshTokenApi } from "../api/authApi";
 import { getCurrentUserApi } from "../api/userApi";
-import {getRefreshTimeout} from "../utils/jwt";
+import {getRefreshTimeout,getRemainingTime} from "../utils/jwt";
+import {retryQueuedRequests} from "../utils/networkRecovery";
 
 export const AuthContext = createContext();
 
@@ -25,9 +26,15 @@ export function AuthProvider({ children }) {
 
     const clearRefreshTimer = () => {
 
-      if (refreshTimerRef.current) {
-        clearTimeout(refreshTimerRef.current);
-      }
+     if (refreshTimerRef.current) {
+
+        clearTimeout(
+            refreshTimerRef.current
+        );
+
+        refreshTimerRef.current = null;
+    }
+
 
     };
     /*
@@ -96,6 +103,55 @@ export function AuthProvider({ children }) {
 
     };
 
+
+    /*
+=====================================
+RECOVER SESSION AFTER TAB RETURNS
+=====================================
+*/
+
+const recoverSession = async () => {
+
+    const token =
+        localStorage.getItem(
+            "accessToken"
+        );
+
+    if (!token) {
+        return;
+    }
+
+    /*
+    remaining time
+    */
+
+    const remaining =
+        getRemainingTime(token);
+
+    /*
+    refresh if less than 2 min
+    */
+
+    if (remaining < 120000) {
+
+        try {
+
+            const response = await refreshTokenApi();
+
+            startRefreshTimer(response.data.accessToken);
+
+        }
+
+        catch {
+
+            logout();
+
+        }
+
+    }
+
+};
+
   /*
   =====================================
   INIT AUTH (APP LOAD)
@@ -163,6 +219,60 @@ export function AuthProvider({ children }) {
   }, []);
 
   /*
+=====================================
+HANDLE TAB VISIBILITY
+=====================================
+*/
+
+useEffect(() => {
+
+    const handleVisibility = () => {
+
+        if (!document.hidden) {
+
+            recoverSession();
+
+            retryQueuedRequests();
+
+        }
+
+    };
+
+    const handleFocus = () => {
+
+        recoverSession();
+
+        retryQueuedRequests();
+
+    };
+
+    document.addEventListener(
+        "visibilitychange",
+        handleVisibility
+    );
+
+    window.addEventListener(
+        "focus",
+        handleFocus
+    );
+
+    return () => {
+
+        document.removeEventListener(
+            "visibilitychange",
+            handleVisibility
+        );
+
+        window.removeEventListener(
+            "focus",
+            handleFocus
+        );
+
+    };
+
+}, []);
+
+  /*
   =====================================
   LOGIN
   =====================================
@@ -174,9 +284,7 @@ export function AuthProvider({ children }) {
       const authData =
         await loginApi({ email, password });
 
-      startRefreshTimer(
-        authData.accessToken
-      );
+      startRefreshTimer(authData.data.accessToken);
 
       const userData = await getCurrentUserApi();
 
@@ -210,8 +318,75 @@ export function AuthProvider({ children }) {
 
     setUser(null);
     setIsLoggedIn(false);
+    setLoading(false);
 
   };
+
+  /*
+=====================================
+NETWORK RECOVERY
+Retry queued requests when internet returns
+=====================================
+*/
+
+useEffect(() => {
+
+    const handleOnline = async () => {
+
+        console.log(
+            "Internet connection restored"
+        );
+
+        try {
+
+            await retryQueuedRequests();
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Queue retry failed:",
+                error
+            );
+
+        }
+
+    };
+
+    const handleOffline = () => {
+
+        console.log(
+            "Internet connection lost"
+        );
+
+    };
+
+    window.addEventListener(
+        "online",
+        handleOnline
+    );
+
+    window.addEventListener(
+        "offline",
+        handleOffline
+    );
+
+    return () => {
+
+        window.removeEventListener(
+            "online",
+            handleOnline
+        );
+
+        window.removeEventListener(
+            "offline",
+            handleOffline
+        );
+
+    };
+
+}, []);
 
   /*
   =====================================

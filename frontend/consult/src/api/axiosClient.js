@@ -1,4 +1,9 @@
 import axios from "axios";
+
+
+import {queueRequest ,setRequestExecutor} from "../utils/networkRecovery";
+
+
 /*
 =====================================
 CLEAR AUTH DATA
@@ -9,6 +14,61 @@ function clearAuthData() {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
 }
+
+/*
+=====================================
+SAFE RETRY METHODS
+=====================================
+*/
+
+const SAFE_METHODS = ["get"];
+
+
+/*
+=====================================
+CHECK IF REQUEST CAN BE QUEUED
+=====================================
+*/
+
+function shouldQueueRequest(error) {
+
+    const request = error.config;
+
+    if (!request) return false;
+
+    /*
+    ===============================
+    ONLY NETWORK ERRORS
+    ===============================
+    */
+
+    if (error.response) {
+        return false;
+    }
+
+    /*
+    ===============================
+    BROWSER IS OFFLINE
+    ===============================
+    */
+
+    if (navigator.onLine) {
+        return false;
+    }
+
+    /*
+    ===============================
+    ALLOW SAFE METHODS ONLY
+    ===============================
+    */
+
+    const method =
+        request.method?.toLowerCase();
+
+    return SAFE_METHODS.includes(method);
+
+}
+
 /*
 =====================================
 MAIN AXIOS INSTANCE
@@ -98,6 +158,42 @@ axiosClient.interceptors.response.use(
   async (error) => {
 
     const originalRequest = error.config || {};
+
+    /*
+    ===============================
+    NETWORK RECOVERY
+    ===============================
+    */
+
+    if (shouldQueueRequest(error)) {
+
+        queueRequest({
+
+            url: originalRequest.url,
+
+            method: originalRequest.method,
+
+            data: originalRequest.data,
+
+            headers: originalRequest.headers
+
+        });
+
+        console.log(
+            "Request queued for retry:",
+            originalRequest.url
+        );
+
+        return Promise.reject({
+
+            ...error,
+
+            message:
+            "No internet connection. Request queued."
+
+        });
+
+    }
 
     /*
     ===============================
@@ -255,8 +351,16 @@ axiosClient.interceptors.response.use(
     }
 
   }
-
+  
 );
+/*
+=====================================
+REGISTER AXIOS EXECUTOR
+=====================================
+*/
+
+setRequestExecutor(axiosClient);
+
 
 export default axiosClient;
 export { refreshClient };

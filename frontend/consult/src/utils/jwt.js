@@ -76,3 +76,20 @@ export const getRefreshTimeout = (token) => {
 
   return Math.max(refreshTime, 0);
 };
+
+/*
+=====================================
+TIME LEFT BEFORE EXPIRY
+=====================================
+*/
+
+export const getRemainingTime = (token) => {
+
+    const expiry = getTokenExpiry(token);
+
+    if (!expiry) {
+        return 0;
+    }
+
+    return expiry - Date.now();
+};
