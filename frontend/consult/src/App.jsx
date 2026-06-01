@@ -17,9 +17,9 @@ import ProtectedRoute from "./routes/ProtectedRoutes";
 import Profile from "./Pages/Profile";
 import ConsultationLayout from "./layouts/ConsultationLayout";
 
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsConditions from "./pages/TermsConditions";
-import RefundPolicy from "./pages/RefundPolicy";
+import PrivacyPolicy from "./Pages/PrivacyPolicy";
+import TermsConditions from "./Pages/TermsConditions";
+import RefundPolicy from "./Pages/RefundPolicy";
 
 function HomePage() {
   return (

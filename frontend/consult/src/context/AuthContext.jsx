@@ -37,6 +37,7 @@ export function AuthProvider({ children }) {
 
 
     };
+    
     /*
     =====================================
     START SILENT REFRESH TIMER

@@ -1,6 +1,6 @@
 package com.consult.backend.entity;
 
-import com.consult.backend.entity.Entity.PaymentStatus;
+
 
 
 import jakarta.persistence.*;
@@ -14,96 +14,85 @@ import org.hibernate.type.SqlTypes;
 
 
 @Entity
-
-@Table(name = "consultation_requests",
-        indexes = {
-                @Index(name = "idx_consult_user", columnList = "user_id"),
-                @Index(name = "idx_consult_category", columnList = "category_id")
-        })
-
+@Table(
+        name="consultation_requests",
+        indexes={
+                @Index(
+                        name="idx_consult_user",
+                        columnList="user_id"
+                ),
+                @Index(
+                        name="idx_consult_category",
+                        columnList="category_id"
+                )
+        }
+)
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class ConsultationRequest {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(
+            strategy=GenerationType.IDENTITY
+    )
     private Long id;
 
-    /*
-     ============================
-     RELATIONS
-     ============================
-    */
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(fetch=FetchType.LAZY)
+    @JoinColumn(
+            name="user_id",
+            nullable=false
+    )
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+    @ManyToOne(fetch=FetchType.LAZY)
+    @JoinColumn(
+            name="category_id",
+            nullable=false
+    )
     private Category category;
 
-    /*
-     ============================
-     DYNAMIC ANSWERS
-     ============================
-    */
+    @OneToOne(
+            mappedBy="consultationRequest",
+            cascade=CascadeType.ALL
+    )
+    private PaymentOrder paymentOrder;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb", nullable = false)
-    private Map<String, Object> answersJson;
+    @Column(
+            columnDefinition="jsonb",
+            nullable=false
+    )
+    private Map<String,Object> answersJson;
 
-
-
-
-    /*
-     ============================
-     PAYMENT INFO
-     ============================
-    */
-
-    private Integer amount;  // store in rupees (21)
-
-    @Enumerated(EnumType.STRING)
-    private PaymentStatus paymentStatus;
-
-    private String razorpayOrderId;
-    private String razorpayPaymentId;
-
-    /*
-     ============================
-     TIMESTAMPS
-     ============================
-    */
-
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
-    @Column(length = 2000)
+    @Column(length=2000)
     private String quickQuestion;
 
     private String contactInfo;
 
     private String name;
-    /*
-     ============================
-     TimeStampHandling
-     ============================
-    */
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
 
     @PrePersist
     public void prePersist(){
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-        this.paymentStatus = PaymentStatus.PENDING;
+
+        this.createdAt= LocalDateTime.now();
+
+        this.updatedAt= LocalDateTime.now();
+
     }
 
     @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-}
+    public void preUpdate(){
 
+        this.updatedAt=
+                LocalDateTime.now();
+
+    }
+
+}

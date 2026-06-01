@@ -7,8 +7,17 @@ import lombok.Data;
 @Builder
 public class CreateOrderResponseDto {
 
+    /*
+    ========================================
+    INTERNAL ORDER ID
+    ========================================
+    */
     private String orderId;
-    private Integer amount;
-    private String currency;
-    private String razorpayKey;
+
+    /*
+    ========================================
+    CASHFREE SESSION
+    ========================================
+    */
+    private String paymentSessionId;
 }

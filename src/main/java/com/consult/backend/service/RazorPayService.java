@@ -4,13 +4,15 @@ import com.consult.backend.dto.CreateOrderResponseDto;
 
 import com.consult.backend.entity.ConsultationRequest;
 import com.consult.backend.entity.Entity.PaymentStatus;
+import com.consult.backend.entity.IdempotencyKey;
+import com.consult.backend.entity.PaymentOrder;
 import com.consult.backend.entity.Questions;
 
 import com.consult.backend.repository.ConsultationRequestRepository;
+import com.consult.backend.repository.PaymentOrderRepository;
 import com.consult.backend.repository.QuestionsRepository;
-import com.razorpay.Order;
-import com.razorpay.RazorpayClient;
-import com.razorpay.Utils;
+import com.fasterxml.jackson.databind.ObjectMapper;
+;
 
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
@@ -19,18 +21,31 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class RazorPayService {
-    private final RazorpayClient razorpayClient;
+    private final PaymentOrderRepository paymentOrderRepository;
+
     private final ConsultationRequestRepository consultationRequestRepository;
+
     private final EmailService emailService;
+
     private final QuestionsRepository questionsRepository;
 
-    @Value("${razorpay.key}")
-    private String key;
+    @Value("${cashfree.appid}")
+    private String appId;
+
+    @Value("${cashfree.secret_key}")
+    private String secretKey;
+
+    private final IdempotencyService idempotencyService;
+
+    private final ObjectMapper objectMapper;
 
     /*
      =========================================
@@ -40,83 +55,297 @@ public class RazorPayService {
     @Transactional
     public CreateOrderResponseDto createOrderForConsultation(
             Long consultationId,
-            String userEmail
+            String userEmail,
+            String idempotencyKey
     ) {
 
         try {
+               /*
+            =========================================
+            IDEMPOTENCY — BUILD REQUEST HASH
+            =========================================
+            */
 
-        /*
-         =========================================
-         STEP 1 — Fetch Consultation
-         =========================================
-        */
+            String payload =
+                    consultationId + ":" + userEmail;
+
+            String requestHash =
+                    idempotencyService.generateRequestHash(
+                            payload
+                    );
+
+                /*
+                =========================================
+                IDEMPOTENCY — LOOKUP KEY
+                =========================================
+                */
+
+            Optional<IdempotencyKey> existingKey =
+                    idempotencyService.findByKey(
+                            idempotencyKey
+                    );
+
+
+            if (existingKey.isPresent()) {
+
+                IdempotencyKey stored =
+                        existingKey.get();
+
+                /*
+                =========================================
+                SECURITY CHECK
+                =========================================
+                */
+
+                if (
+                        !idempotencyService.matchesRequest(
+                                stored,
+                                requestHash
+                        )
+                ) {
+
+                    throw new RuntimeException(
+                            "Idempotency key reused with different request"
+                    );
+                }
+
+                /*
+                =========================================
+                RETURN STORED RESPONSE
+                =========================================
+                */
+
+                return objectMapper.readValue(
+                        stored.getResponseBody(),
+                        CreateOrderResponseDto.class
+                );
+            }
+            /*
+            =========================================
+            STEP 1 — Fetch Consultation
+            =========================================
+            */
+
             ConsultationRequest consultation =
-                    consultationRequestRepository.findById(consultationId)
-                            .orElseThrow(() -> new RuntimeException("Consultation not found"));
+                    consultationRequestRepository
+                            .findById(consultationId)
+                            .orElseThrow(
+                                    () -> new RuntimeException(
+                                            "Consultation not found"
+                                    )
+                            );
 
-        /*
-         =========================================
-         STEP 2 — Validate Ownership
-         =========================================
-        */
-            if (!consultation.getUser().getEmail().equals(userEmail)) {
-                throw new RuntimeException("Unauthorized access to consultation");
+            /*
+            =========================================
+            STEP 2 — Validate Ownership
+            =========================================
+            */
+
+            if (!consultation.getUser()
+                    .getEmail()
+                    .equals(userEmail)) {
+
+                throw new RuntimeException(
+                        "Unauthorized access to consultation"
+                );
             }
 
-        /*
-         =========================================
-         STEP 3 — Check Already Paid
-         =========================================
-        */
-            if (consultation.getPaymentStatus() == PaymentStatus.PAID) {
-                throw new RuntimeException("Consultation already paid");
+            /*
+            =========================================
+            STEP 3 — Already Paid?
+            =========================================
+            */
+
+            if (consultation.getPaymentStatus()
+                    == PaymentStatus.PAID) {
+
+                throw new RuntimeException(
+                        "Consultation already paid"
+                );
             }
 
-        /*
-         =========================================
-         STEP 4 — Prevent Duplicate Order Creation
-         =========================================
-        */
-            if (consultation.getRazorpayOrderId() != null) {
-                throw new RuntimeException("Order already created for this consultation");
+            /*
+            =========================================
+            STEP 4 — Prevent duplicate orders
+            =========================================
+            */
+
+            if (consultation.getPaymentOrder() != null) {
+
+                throw new RuntimeException(
+                        "Order already created for this consultation"
+                );
             }
 
-        /*
-         =========================================
-         STEP 5 — Create Razorpay Order
-         =========================================
-        */
-            JSONObject orderRequest = new JSONObject();
-            orderRequest.put("amount", consultation.getAmount() * 100); // rupees → paise
-            orderRequest.put("currency", "INR");
-            orderRequest.put("receipt", "CONSULT_" + consultation.getId());
+            /*
+            =========================================
+            STEP 5 — Create Gateway Order
+            =========================================
+            */
 
-            Order order = razorpayClient.orders.create(orderRequest);
+            JSONObject orderRequest =
+                    new JSONObject();
 
-        /*
-         =========================================
-         STEP 6 — Save Order ID in DB
-         =========================================
-        */
-            consultation.setRazorpayOrderId(order.get("id"));
-            consultationRequestRepository.save(consultation);
+            orderRequest.put(
+                    "amount",
+                    consultation.getAmount() * 100
+            );
 
-        /*
-         =========================================
-         STEP 7 — Return Response
-         =========================================
-        */
-            return CreateOrderResponseDto.builder()
-                    .orderId(order.get("id"))
-                    .amount(order.get("amount"))
-                    .currency(order.get("currency"))
-                    .razorpayKey(key) // inject key in class
-                    .build();
+            orderRequest.put(
+                    "currency",
+                    "INR"
+            );
 
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create Razorpay order: " + e.getMessage(), e);
-        }
-    }
+            orderRequest.put(
+                    "receipt",
+                    "CONSULT_" +
+                            consultation.getId()
+            );
+
+            Order order =
+                    razorpayClient
+                            .orders
+                            .create(orderRequest);
+
+            /*
+            =========================================
+            STEP 6 — Create PaymentOrder
+            =========================================
+            */
+
+            PaymentOrder paymentOrder =
+                    PaymentOrder.builder()
+
+                            .orderId(
+                                    "PAY_" + UUID.randomUUID()
+                            )
+
+                            .gatewayOrderId(
+                                    order.get("id").toString()
+                            )
+
+
+
+                            .amount(
+                                    BigDecimal.valueOf(
+                                            consultation.getAmount()
+                                    )
+                            )
+
+                            .currency("INR")
+
+                            .status(
+                                    PaymentStatus.PENDING
+                            )
+
+                            .consultationRequest(
+                                    consultation
+                            )
+
+                            .build();
+
+                    /*
+                    =========================================
+                    STEP 7 — Link both sides
+                    =========================================
+                    */
+
+                    consultation.setPaymentOrder(
+                            paymentOrder
+                    );
+
+                    /*
+                    =========================================
+                    STEP 8 — TEMPORARY
+                    Keep legacy fields alive
+                    =========================================
+                    */
+
+                    consultation.setPaymentStatus(
+                            PaymentStatus.PENDING
+                    );
+
+                    consultation.setRazorpayOrderId(
+                            order.get("id")
+                    );
+
+                /*
+                =========================================
+                STEP 9 — Save
+                =========================================
+                */
+
+                    paymentOrderRepository.save(
+                            paymentOrder
+                    );
+
+                    consultationRequestRepository.save(
+                            consultation
+                    );
+
+                /*
+                =========================================
+                STEP 10 — BUILD RESPONSE
+                =========================================
+                */
+
+                            CreateOrderResponseDto responseDto =
+                                    CreateOrderResponseDto
+                                            .builder()
+
+                                            .orderId(
+                                                    order.get("id").toString()
+                                            )
+
+                                            .amount(
+                                                    order.get("amount")
+                                            )
+
+                                            .currency(
+                                                    order.get("currency")
+                                            )
+
+                                            .razorpayKey(
+                                                    key
+                                            )
+
+                                            .build();
+
+                /*
+                =========================================
+                STEP 11 — STORE IDEMPOTENCY RESPONSE
+                =========================================
+                */
+
+                            String responseBody =
+                                    objectMapper.writeValueAsString(
+                                            responseDto
+                                    );
+
+                            idempotencyService.saveResponse(
+                                    idempotencyKey,
+                                    requestHash,
+                                    responseBody
+                            );
+
+                /*
+                =========================================
+                STEP 12 — RETURN RESPONSE
+                =========================================
+                */
+
+                            return responseDto;
+                        }
+
+                        catch (Exception e) {
+
+                            throw new RuntimeException(
+                                    "Failed to create Razorpay order: "
+                                            + e.getMessage(),
+                                    e
+                            );
+                        }
+                    }
     /*
      =========================================
      VERIFY PAYMENT SIGNATURE

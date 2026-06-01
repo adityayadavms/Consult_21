@@ -1,6 +1,6 @@
 package com.consult.backend.service;
 
-import com.consult.backend.dto.CreateOrderResponseDto;
+
 import com.consult.backend.dto.QuickConsultationRequestDto;
 import com.consult.backend.dto.QuickConsultationResponseDto;
 import com.consult.backend.entity.Category;
@@ -16,11 +16,11 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class QuickConsultationService {
+public class  QuickConsultationService {
     private final ConsultationRequestRepository consultationRequestRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
-    private final RazorPayService razorpayService;
+
 
     public QuickConsultationResponseDto createOrder(QuickConsultationRequestDto dto) {
 
@@ -65,21 +65,10 @@ public class QuickConsultationService {
                 .quickQuestion(dto.getQuestion())
                 .contactInfo(dto.getEmailOrPhone())
                 .name(dto.getName())
-                .amount(21)
                 .build();
 
         consultationRequestRepository.save(consultation);
 
-        /*
-         =========================================
-         STEP 5 — CREATE RAZORPAY ORDER
-         =========================================
-        */
-        CreateOrderResponseDto order =
-                razorpayService.createOrderForConsultation(
-                        consultation.getId(),
-                        user.getEmail()
-                );
 
         /*
          =========================================
@@ -87,9 +76,12 @@ public class QuickConsultationService {
          =========================================
         */
         return QuickConsultationResponseDto.builder()
-                .consultationId(consultation.getId())
-                .razorpayOrderId(order.getOrderId())
-                .amount(21)
+                .consultationId(
+                        consultation.getId()
+                )
+                .message(
+                        "Quick consultation submitted successfully"
+                )
                 .build();
     }
 }

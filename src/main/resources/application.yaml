@@ -70,9 +70,11 @@ logging:
     com.consult.backend.Security: DEBUG
 
 
-razorpay:
-  key: rzp_test_wXffuqFalQ
-  secret: hpyYedkwGyxq0LtM0IdSMxkEUNdyGYzv
+cashfree:
+  appid : ${CASHFREE_CLIENT_ID}
+  secret_key : ${CASHFREE_CLIENT_SECRET}
+  baseUrl:
+
 
 
 consult21:

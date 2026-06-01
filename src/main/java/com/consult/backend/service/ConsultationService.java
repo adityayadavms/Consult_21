@@ -54,12 +54,12 @@ public class ConsultationService {
         validateQuestion(dto.getAnswers());
 
         // STEP 5 — SAVE CONSULTATION
-        ConsultationRequest consultation = ConsultationRequest.builder()
-                .user(user)
-                .category(category)
-                .answersJson(dto.getAnswers())
-                .amount(21)
-                .build();
+        ConsultationRequest consultation =
+                ConsultationRequest.builder()
+                        .user(user)
+                        .category(category)
+                        .answersJson(dto.getAnswers())
+                        .build();
 
         consultationRequestRepository.save(consultation);
 
@@ -67,9 +67,12 @@ public class ConsultationService {
 
         // STEP 6 — RESPONSE
         return SubmitConsultationResponseDto.builder()
-                .consultationId(consultation.getId())
-                .razorpayOrderId(null)
-                .amount(21)
+                .consultationId(
+                        consultation.getId()
+                )
+                .message(
+                        "Consultation submitted successfully"
+                )
                 .build();
     }
 

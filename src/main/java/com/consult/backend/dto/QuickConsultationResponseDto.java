@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class QuickConsultationResponseDto {
     private Long consultationId;
-    private String razorpayOrderId;
-    private Integer amount;
+    private String message;
+
 }

@@ -13,7 +13,5 @@ public class SubmitConsultationResponseDto {
 
     private Long consultationId;
 
-    private String razorpayOrderId;
-
-    private Integer amount;
+    private String message;
 }

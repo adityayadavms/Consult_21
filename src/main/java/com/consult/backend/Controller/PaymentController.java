@@ -1,14 +1,12 @@
 package com.consult.backend.Controller;
 
-import com.consult.backend.dto.CreateOrderRequestDto;
-import com.consult.backend.dto.CreateOrderResponseDto;
-import com.consult.backend.dto.PaymentVerificationRequestDto;
-import com.consult.backend.dto.PaymentVerificationResponseDto;
+import com.consult.backend.dto.*;
 import com.consult.backend.service.RazorPayService;
-
+import org.springframework.http.ResponseEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("/payments")
@@ -22,8 +20,9 @@ public class PaymentController {
      =========================================
     */
     @PostMapping("/create-order")
-    public CreateOrderResponseDto createOrder(
-            @RequestBody CreateOrderRequestDto dto
+    public ResponseEntity<ApiResponseDto<CreateOrderResponseDto>> createOrder(
+            @RequestHeader("Idempotency-Key")
+            String idempotencyKey,   @RequestBody CreateOrderRequestDto dto
     ) {
 
         String email = SecurityContextHolder
@@ -33,7 +32,8 @@ public class PaymentController {
 
         return razorpayService.createOrderForConsultation(
                 dto.getConsultationId(),
-                email
+                email,
+                idempotencyKey
         );
     }
 
