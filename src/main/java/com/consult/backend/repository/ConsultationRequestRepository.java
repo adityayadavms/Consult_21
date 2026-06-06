@@ -10,7 +10,7 @@ public interface ConsultationRequestRepository extends JpaRepository<Consultatio
 
     List<ConsultationRequest> findByUserId(Long userId);
 
-    List<ConsultationRequest> findByPaymentStatus(PaymentStatus status);
 
-    ConsultationRequest findByRazorpayOrderId(String razorpayOrderId);
+
+
 }

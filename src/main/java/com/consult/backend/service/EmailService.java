@@ -1,12 +1,17 @@
 package com.consult.backend.service;
 
 import com.consult.backend.entity.ConsultationRequest;
+import com.consult.backend.entity.Invoice;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.util.Map;
 
 @Service
@@ -42,14 +47,17 @@ public class EmailService {
      ADMIN EMAIL AFTER SUCCESSFUL PAYMENT
      =========================================
     */
-    public void sendPaymentSuccessNotification(ConsultationRequest consultation) {
+    public void sendPaymentSuccessNotification(ConsultationRequest consultation, Invoice invoice) {
 
         try {
 
-            SimpleMailMessage message = new SimpleMailMessage();
+            MimeMessage message = mailSender.createMimeMessage();
 
-            message.setTo(adminEmail);
-            message.setSubject("New Paid Consultation - ID: " + consultation.getId());
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setTo(adminEmail);
+
+            helper.setSubject("New Paid Consultation - ID: " + consultation.getId());
 
             String answersText;
 
@@ -79,15 +87,27 @@ public class EmailService {
             }
 
             emailBody.append("Category: ").append(consultation.getCategory().getName()).append("\n")
-                    .append("Amount Paid: ₹").append(consultation.getAmount()).append("\n")
-                    .append("Payment ID: ").append(consultation.getRazorpayPaymentId()).append("\n")
-                    .append("Status: PAID\n\n")
+                    .append("Amount Paid: ₹").append(consultation.getPaymentOrder().getAmount()).append("\n")
+                    .append("Status: ")
+                    .append(
+                            consultation
+                                    .getPaymentOrder()
+                                    .getStatus()
+                    )
+                    .append("\n\n")
                     .append("User Responses:\n")
                     .append("--------------------------\n")
                     .append(answersText)
                     .append("\n\nPlease review this consultation request.");
 
-            message.setText(emailBody.toString());
+            helper.setText(emailBody.toString(), false);
+
+            if (invoice != null && invoice.getPdfUrl() != null) {
+
+                FileSystemResource pdf = new FileSystemResource(new File( invoice.getPdfUrl() ));
+
+                helper.addAttachment(invoice.getInvoiceNumber() + ".pdf", pdf);
+            }
 
             mailSender.send(message);
 
@@ -107,14 +127,17 @@ public class EmailService {
      USER CONFIRMATION EMAIL
      =========================================
     */
-    public void sendUserConsultationConfirmation(ConsultationRequest consultation) {
+    public void sendUserConsultationConfirmation(ConsultationRequest consultation, Invoice invoice) {
 
         try {
 
-            SimpleMailMessage message = new SimpleMailMessage();
+            MimeMessage message = mailSender.createMimeMessage();
 
-            message.setTo(consultation.getUser().getEmail());
-            message.setSubject("Consult21 Consultation Confirmation");
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setTo(consultation.getUser().getEmail());
+
+            helper.setSubject("Consult21 Consultation Confirmation");
 
             message.setText(
                     "Hello,\n\n" +
@@ -123,12 +146,19 @@ public class EmailService {
 
                             "Consultation ID: " + consultation.getId() + "\n" +
                             "Category: " + consultation.getCategory().getName() + "\n" +
-                            "Amount Paid: ₹" + consultation.getAmount() + "\n\n" +
-
+                            "Amount Paid: ₹" + consultation.getPaymentOrder().getAmount() + "\n\n" +
+                            "\n\nInvoice Number: " + invoice.getInvoiceNumber() +
                             "Our experts will review your request and respond within 24–48 hours.\n\n" +
 
                             "Thank you for choosing Consult21."
             );
+
+            if ( invoice.getPdfUrl() != null) {
+
+                FileSystemResource pdf = new FileSystemResource(new File(invoice.getPdfUrl()));
+
+                helper.addAttachment(invoice.getInvoiceNumber() + ".pdf", pdf);
+            }
 
             mailSender.send(message);
 

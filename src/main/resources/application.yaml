@@ -14,6 +14,9 @@ spring:
   application:
     name: backend
 
+  profiles:
+    active: local
+
   datasource:
     url: jdbc:postgresql://localhost:5432/Consult21
     username: postgres
@@ -71,9 +74,9 @@ logging:
 
 
 cashfree:
-  appid : ${CASHFREE_CLIENT_ID}
-  secret_key : ${CASHFREE_CLIENT_SECRET}
-  baseUrl:
+  appid : ${CASHFREE_APPLICATION_ID}
+  secret_key : ${CASHFREE_SECRET_ID}
+  baseUrl: ${CASHFREE_BASE_URL}
 
 
 

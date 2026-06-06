@@ -75,11 +75,18 @@ public class WebSecurityConfig {
                                    "/auth/reset-password"
                            ).permitAll()
 
+                           .requestMatchers(
+                                   "/webhooks/cashfree"
+                           ).permitAll()
+
+
                            .requestMatchers("/auth/me").authenticated()
 
                            .requestMatchers("/consultations/**").authenticated()
 
                            .requestMatchers("/user/**").hasRole("USER")
+
+                           .requestMatchers("/invoices/**").authenticated()
 
 
 

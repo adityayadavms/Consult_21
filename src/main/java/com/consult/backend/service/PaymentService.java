@@ -13,6 +13,7 @@ import com.consult.backend.repository.PaymentTransactionRepository;
 import com.consult.backend.repository.QuestionsRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentService {
     private final CashFreeService cashfreeService;
 
@@ -42,10 +44,10 @@ public class PaymentService {
 
     private final ObjectMapper objectMapper;
 
+    private final InvoiceService invoiceService;
+
     @Transactional
-    public CreateOrderResponseDto createOrderForConsultation(
-            Long consultationId,
-            String userEmail,
+    public CreateOrderResponseDto createOrderForConsultation(Long consultationId, String userEmail,
             String idempotencyKey
     ) {
 
@@ -88,7 +90,7 @@ public class PaymentService {
                 */
 
                 if (
-                        !idempotencyService.matchesRequest(
+                        !idempotencyService.isDifferentRequest(
                                 stored,
                                 requestHash
                         )
@@ -341,9 +343,7 @@ public class PaymentService {
             return PaymentStatus.FAILED;
         }
 
-        return switch (
-                status.toUpperCase()
-                ) {
+        return switch (status.toUpperCase()) {
 
             case "PAID" ->
                     PaymentStatus.PAID;
@@ -363,7 +363,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public void verifyPayment(Long consultationId, String cashfreeOrderId, String userEmail){
+    public void verifyPayment(Long consultationId, String cashfreeOrderId,  String cashfreePaymentId, String userEmail){
         ConsultationRequest consultation = consultationRequestRepository
                         .findById(consultationId)
                         .orElseThrow(
@@ -371,6 +371,11 @@ public class PaymentService {
                                         "Consultation not found"
                                 )
                         );
+
+        if (cashfreePaymentId == null || cashfreePaymentId.isBlank()) {
+            throw new RuntimeException("Cashfree payment id missing");
+        }
+
 
         if (!consultation.getUser()
                         .getEmail()
@@ -381,19 +386,13 @@ public class PaymentService {
             );
         }
 
-        PaymentOrder paymentOrder =
-                consultation.getPaymentOrder();
+        PaymentOrder paymentOrder = consultation.getPaymentOrder();
 
         if (paymentOrder == null) {
-            throw new RuntimeException(
-                    "Payment order not found"
-            );
+            throw new RuntimeException("Payment order not found");
         }
 
-        if (
-                !paymentOrder.getGatewayOrderId()
-                        .equals(cashfreeOrderId)
-        ) {
+        if (!paymentOrder.getGatewayOrderId().equals(cashfreeOrderId)) {
             throw new RuntimeException(
                     "Order mismatch"
             );
@@ -403,10 +402,7 @@ public class PaymentService {
                         cashfreeOrderId
                 );
 
-        BigDecimal gatewayAmount =
-                BigDecimal.valueOf(
-                        cashfreeResponse.getOrderAmount()
-                );
+        BigDecimal gatewayAmount = BigDecimal.valueOf(cashfreeResponse.getOrderAmount());
 
         if (
                 gatewayAmount.compareTo(
@@ -439,76 +435,70 @@ public class PaymentService {
         }
         catch (Exception e) {
 
-            throw new RuntimeException(
-                    "Failed to serialize CashFree response",
-                    e
-            );
+            throw new RuntimeException("Failed to serialize CashFree response", e);
 
         }
 
         PaymentStatus paymentStatus = mapCashfreeStatus(cashfreeResponse.getOrderStatus());
 
+
+
         PaymentTransaction transaction =
-                PaymentTransaction.builder()
-
-                        .transactionId(
-                                "TXN_" + UUID.randomUUID()
-                        )
-
-                        .paymentOrder(
+                paymentTransactionRepository
+                        .findTopByPaymentOrderOrderByCreatedAtDesc(
                                 paymentOrder
                         )
+                        .orElseThrow(
+                                () -> new RuntimeException(
+                                        "Transaction not found"
+                                )
+                        );
 
-                        .status(
 
-                                paymentStatus
-                                        ==
-                                        PaymentStatus.PAID
+        transaction.setStatus(
 
-                                        ?
+                paymentStatus == PaymentStatus.PAID
 
-                                        TransactionStatus.SUCCESS
+                        ?
 
-                                        :
+                        TransactionStatus.SUCCESS
 
-                                        TransactionStatus.FAILED
-                        )
+                        :
 
-                        .gatewayPaymentId(
-                                cashfreeResponse
-                                        .getCashfreeOrderId()
-                        )
+                        TransactionStatus.FAILED
+        );
 
-                        .gatewayResponse(
-                                gatewayResponse
-                        )
+        transaction.setGatewayResponse(gatewayResponse);
 
-                        .build();
+        transaction.setGatewayPaymentId(cashfreePaymentId);
+
         paymentTransactionRepository.save(
                 transaction
         );
-        paymentOrder.setStatus(
-                paymentStatus
-        );
 
-        paymentOrderRepository.save(
-                paymentOrder
-        );
+        if (paymentOrder.getStatus() != paymentStatus) {
+
+            paymentOrder.setStatus(
+                    paymentStatus
+            );
+
+            paymentOrderRepository.save(
+                    paymentOrder
+            );
+        }
+
+
 
         if (paymentStatus != PaymentStatus.PAID) {
             return;
         }
 
+        Invoice invoice = invoiceService.generateInvoice(paymentOrder);
+
         String questionText = extractQuestion(consultation);
 
 
-        if (
-                !questionsRepository
-                        .existsByConsultation(
-                                consultation
-                        )
-        )
-        {
+        if (!questionsRepository.existsByConsultation(consultation)) {
 
             Questions question =
                     Questions.builder()
@@ -531,15 +521,24 @@ public class PaymentService {
                     question
             );
         }
+        else {
+
+            log.info(
+                    "Question already exists for consultation {}",
+                    consultation.getId()
+            );
+
+        }
 
         emailService
                 .sendPaymentSuccessNotification(
-                        consultation
+                        consultation, invoice
                 );
 
         emailService
                 .sendUserConsultationConfirmation(
-                        consultation
+                        consultation,
+                        invoice
                 );
     }
 
@@ -635,24 +634,10 @@ public class PaymentService {
     =========================================
     */
 
-        for (
-                Object value
-                :
-                consultation
-                        .getAnswersJson()
-                        .values()
-        ) {
+        for (Object value: consultation.getAnswersJson().values()) {
 
-            if (
-                    value instanceof String
-                            &&
-                            !((String) value)
-                                    .trim()
-                                    .isEmpty()
-            ) {
-
-                return ((String) value)
-                        .trim();
+            if (value instanceof String && !((String) value).trim().isEmpty()) {
+                return ((String) value).trim();
             }
         }
 
@@ -666,5 +651,63 @@ public class PaymentService {
                 "Question not found in consultation"
         );
     }
+
+    @Transactional
+    public void markPaymentFailed(Long consultationId, String cashfreeOrderId, String cashfreePaymentId,
+            String failureReason
+    ) {
+        ConsultationRequest consultation = consultationRequestRepository
+                        .findById(consultationId)
+                        .orElseThrow(
+                                () -> new RuntimeException(
+                                        "Consultation not found"
+                                )
+                        );
+
+        PaymentOrder paymentOrder = consultation.getPaymentOrder();
+        if (paymentOrder == null) {
+            throw new RuntimeException("Payment order not found");
+        }
+
+        PaymentTransaction transaction = paymentTransactionRepository
+                .findTopByPaymentOrderOrderByCreatedAtDesc(paymentOrder)
+                        .orElseThrow(() -> new RuntimeException("Transaction not found"));
+
+
+        if (!paymentOrder.getGatewayOrderId().equals(cashfreeOrderId)) {
+            throw new RuntimeException("Order mismatch");
+        }
+
+
+        transaction.setStatus(
+                TransactionStatus.FAILED
+        );
+
+        transaction.setGatewayPaymentId(
+                cashfreePaymentId
+        );
+
+        transaction.setFailureReason(
+                failureReason
+        );
+
+        paymentTransactionRepository.save(
+                transaction
+        );
+
+
+        paymentOrder.setStatus(
+                PaymentStatus.FAILED
+        );
+
+        paymentOrderRepository.save(
+                paymentOrder
+        );
+
+
+
+    }
+
+
 
 }

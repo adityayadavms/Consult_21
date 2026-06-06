@@ -2,6 +2,7 @@ package com.consult.backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -38,4 +39,13 @@ public class Invoice {
     private String pdfUrl;
 
     private LocalDateTime generatedAt;
+
+    @Column(nullable = false)
+    private String customerEmail;
+
+    @Column(nullable = false)
+    private BigDecimal amount;
+
+    @Column(nullable = false)
+    private String currency;
 }

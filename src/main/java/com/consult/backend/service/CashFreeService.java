@@ -4,7 +4,7 @@ import com.consult.backend.dto.CashfreeCreateOrderRequest;
 import com.consult.backend.dto.CashfreeCreateOrderResponse;
 import com.consult.backend.dto.CashfreeCustomerDetails;
 import com.consult.backend.dto.CashfreeOrderResponse;
-import com.consult.backend.entity.Entity.PaymentStatus;
+
 import com.consult.backend.exception.CashFreeException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatusCode;
@@ -12,11 +12,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import com.consult.backend.Configuration.CashFreeConfig;
 
-import static org.apache.logging.log4j.util.ProviderActivator.API_VERSION;
+
 
 @Service
 @RequiredArgsConstructor
 public class CashFreeService {
+
+    private static final String API_VERSION = "2025-01-01";
+
     private final WebClient cashfreeWebClient;
 
     private final CashFreeConfig cashfreeConfig;

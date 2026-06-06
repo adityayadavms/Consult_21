@@ -29,6 +29,29 @@ public class ProcessedWebhook {
     )
     private String webhookId;
 
+
+    /*
+    ========================================
+    EVENT TYPE
+    Example:
+    PAYMENT_SUCCESS_WEBHOOK
+    ========================================
+    */
+
+    @Column(
+            nullable = false
+    )
+    private String eventType;
+
+    /*
+    ========================================
+    RAW PAYLOAD
+    ========================================
+    */
+
+    @Lob
+    private String payload;
+
     @Column(
             nullable=false
     )

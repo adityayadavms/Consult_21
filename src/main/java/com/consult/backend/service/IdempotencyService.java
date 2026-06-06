@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.LocalDateTime;
 import java.util.HexFormat;
 import java.util.Optional;
 
@@ -38,17 +39,18 @@ public class IdempotencyService {
                         .idempotencyKey(idempotencyKey)
                         .requestHash(requestHash)
                         .responseBody(responseBody)
+                        .createdAt(LocalDateTime.now())
                         .build();
 
         idempotencyKeyRepository.save(entity);
     }
 
-    public boolean matchesRequest(
+    public boolean isDifferentRequest(
             IdempotencyKey stored,
             String requestHash
     ) {
 
-        return stored.getRequestHash()
+        return !stored.getRequestHash()
                 .equals(requestHash);
     }
 
