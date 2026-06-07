@@ -48,8 +48,7 @@ export function AuthProvider({ children }) {
 
       clearRefreshTimer();
 
-      const timeout =
-        getRefreshTimeout(accessToken);
+      const timeout = getRefreshTimeout(accessToken);
 
       /*
       token already expired
@@ -113,10 +112,7 @@ RECOVER SESSION AFTER TAB RETURNS
 
 const recoverSession = async () => {
 
-    const token =
-        localStorage.getItem(
-            "accessToken"
-        );
+    const token = localStorage.getItem( "accessToken");
 
     if (!token) {
         return;
@@ -126,8 +122,7 @@ const recoverSession = async () => {
     remaining time
     */
 
-    const remaining =
-        getRemainingTime(token);
+    const remaining =getRemainingTime(token);
 
     /*
     refresh if less than 2 min
@@ -139,7 +134,7 @@ const recoverSession = async () => {
 
             const response = await refreshTokenApi();
 
-            startRefreshTimer(response.data.accessToken);
+            startRefreshTimer(response.accessToken);
 
         }
 
@@ -282,10 +277,9 @@ useEffect(() => {
 
     try {
 
-      const authData =
-        await loginApi({ email, password });
+      const authData = await loginApi({ email, password });
 
-      startRefreshTimer(authData.data.accessToken);
+      startRefreshTimer(authData.accessToken);
 
       const userData = await getCurrentUserApi();
 

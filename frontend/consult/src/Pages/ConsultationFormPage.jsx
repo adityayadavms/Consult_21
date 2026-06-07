@@ -22,7 +22,7 @@ function ConsultationFormPage() {
   // =============================
   // FETCH FORM
   // =============================
-        useEffect(() => {
+  useEffect(() => {
   const fetchForm = async () => {
     try {
       const res = await getFormTemplateApi(categoryId);
