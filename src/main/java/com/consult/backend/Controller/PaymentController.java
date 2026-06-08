@@ -45,5 +45,18 @@ public class PaymentController {
         );
     }
 
+    @GetMapping("/status/{orderId}")
+    public ResponseEntity<ApiResponseDto<PaymentStatusResponseDto>> getPaymentStatus(
+            @PathVariable String orderId
+    ) {
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        PaymentStatusResponseDto response = paymentService.getPaymentStatus(orderId, email);
+
+        return ResponseUtil.success(response, "Payment status retrieved successfully");
+    }
 
 }

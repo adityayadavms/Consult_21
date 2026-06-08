@@ -4,6 +4,7 @@ package com.consult.backend.service;
 import com.consult.backend.dto.CashfreeCreateOrderResponse;
 import com.consult.backend.dto.CashfreeOrderResponse;
 import com.consult.backend.dto.CreateOrderResponseDto;
+import com.consult.backend.dto.PaymentStatusResponseDto;
 import com.consult.backend.entity.*;
 import com.consult.backend.entity.Entity.PaymentStatus;
 import com.consult.backend.entity.Entity.TransactionStatus;
@@ -708,6 +709,67 @@ public class PaymentService {
 
     }
 
+
+    /**
+     * Get payment status by order ID
+     * @param orderId - Internal order ID (PAY_xxx) or gateway order ID
+     * @param userEmail - Current logged-in user email (for authorization)
+     * @return PaymentStatusResponseDto with payment details
+     */
+    @Transactional(readOnly = true)
+    public PaymentStatusResponseDto getPaymentStatus(String orderId, String userEmail) {
+
+        // STEP 1: Find payment order by either internal ID or gateway ID
+        PaymentOrder paymentOrder = paymentOrderRepository
+                .findByOrderId(orderId)
+                .orElseThrow(() -> new RuntimeException("Payment order not found"));
+
+        // STEP 2: Authorize - user must own this payment
+        ConsultationRequest consultation = paymentOrder.getConsultationRequest();
+
+        if (!consultation.getUser().getEmail().equals(userEmail)) {
+            throw new RuntimeException("Unauthorized access to payment information");
+        }
+
+        // STEP 3: Get the latest transaction for failure reason (if any)
+        PaymentTransaction latestTransaction = paymentTransactionRepository
+                .findTopByPaymentOrderOrderByCreatedAtDesc(paymentOrder)
+                .orElse(null);
+
+        // STEP 4: Build and return response
+        return PaymentStatusResponseDto.builder()
+                .orderId(paymentOrder.getOrderId())
+                .gatewayOrderId(paymentOrder.getGatewayOrderId())
+                .status(paymentOrder.getStatus().name())
+                .amount(paymentOrder.getAmount().doubleValue())
+                .currency(paymentOrder.getCurrency())
+                .consultationId(consultation.getId())
+                .isPaid(paymentOrder.getStatus() == PaymentStatus.PAID)
+                .paidAt(getPaidAtTimestamp(paymentOrder, latestTransaction))
+                .failureReason(latestTransaction != null ? latestTransaction.getFailureReason() : null)
+                .build();
+    }
+
+    /**
+     * Helper method to get the timestamp when payment was marked as PAID
+     */
+    private String getPaidAtTimestamp(PaymentOrder paymentOrder, PaymentTransaction latestTransaction) {
+        if (paymentOrder.getStatus() != PaymentStatus.PAID) {
+            return null;
+        }
+
+        // Return transaction creation time if available
+        if (latestTransaction != null && latestTransaction.getCreatedAt() != null) {
+            return latestTransaction.getCreatedAt().toString();
+        }
+
+        // Fallback to payment order update time
+        if (paymentOrder.getUpdatedAt() != null) {
+            return paymentOrder.getUpdatedAt().toString();
+        }
+
+        return null;
+    }
 
 
 }
