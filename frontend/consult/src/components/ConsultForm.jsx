@@ -1,17 +1,24 @@
+// src/components/ConsultForm.jsx
+
 import { useState } from "react";
-import toast from "react-hot-toast"; 
-import { createQuickConsultationApi, verifyPaymentApi } from "../api/consultationApi";
-import { loadRazorpay } from "../utils/loadRazorpay";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { 
+  createQuickConsultationApi, 
+  createPaymentOrderApi 
+} from "../api/consultationApi";
+import { initiateCashfreePayment } from "../utils/cashfree";
 
 function ConsultForm({ services }) {
-
+  const navigate = useNavigate();
+  
   const [form, setForm] = useState({
     name: "",
     contact: "",
     category: "",
     question: ""
   });
-
+  
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -24,74 +31,90 @@ function ConsultForm({ services }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validation
+    if (!form.name.trim()) {
+      toast.error("Please enter your name");
+      return;
+    }
+    if (!form.contact.trim()) {
+      toast.error("Please enter email or phone");
+      return;
+    }
+    if (!form.category) {
+      toast.error("Please select a category");
+      return;
+    }
+    if (!form.question.trim() || form.question.trim().length < 10) {
+      toast.error("Please enter a question (minimum 10 characters)");
+      return;
+    }
+
     try {
       setLoading(true);
+      toast.loading("Creating consultation...", { id: "payment" });
 
-      const isLoaded = await loadRazorpay();
-
-      if (!isLoaded) {
-        toast.error("Razorpay SDK failed to load");
-        return;
-      }
-
-      const data = await createQuickConsultationApi(form);
-
-      const { consultationId, razorpayOrderId, amount } = data;
-
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY,
-        amount,
-        currency: "INR",
-        name: "Consult21",
-        description: "Quick Consultation",
-        order_id: razorpayOrderId,
-
-        handler: async function (response) {
-          try {
-            await verifyPaymentApi({
-              consultationId,
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature
-            });
-
-            toast.success("Payment successful! ");
-
-          } catch {
-            toast.error("Payment verification failed");
-          }
-        },
-
-        prefill: {
-          name: form.name,
-          email: form.contact
-        },
-
-        theme: {
-          color: "#ff6a00"
-        },
-
-        modal: {
-          ondismiss: function () {
-            toast("Payment cancelled");
-          }
-        }
-      };
-
-      const rzp = new window.Razorpay(options);
-
-      rzp.on("payment.failed", function (response) {
-        console.error("Payment Failed:", response.error);
-        toast.error(response.error.description || "Payment failed");
+      // STEP 1: Create quick consultation
+      const consultationResult = await createQuickConsultationApi({
+        name: form.name,
+        emailOrPhone: form.contact,
+        category: form.category,
+        question: form.question
       });
 
-      rzp.open();
+      const consultationId = consultationResult.consultationId;
+      console.log("Consultation created:", consultationId);
+
+      toast.loading("Creating payment order...", { id: "payment" });
+
+      // STEP 2: Create payment order with idempotency key
+      const idempotencyKey = crypto.randomUUID();
+      const paymentOrder = await createPaymentOrderApi(consultationId, idempotencyKey);
+      
+      const { orderId, paymentSessionId } = paymentOrder;
+      console.log("Payment order created:", { orderId, paymentSessionId });
+
+      toast.loading("Opening payment window...", { id: "payment" });
+
+      // STEP 3: Initiate Cashfree hosted checkout
+      const result = await initiateCashfreePayment(paymentSessionId, orderId);
+
+      toast.dismiss("payment");
+
+      // STEP 4: Handle result
+      if (result.success) {
+        if (result.redirect) {
+          // Cashfree will redirect automatically
+          toast.success("Redirecting to payment...");
+        } else {
+          // Payment completed inline (some UPI methods)
+          toast.success("Payment initiated! We'll notify you once confirmed.");
+          // Redirect to my questions page after short delay
+          setTimeout(() => {
+            navigate("/questions");
+          }, 2000);
+        }
+      } else {
+        toast.error(result.error || "Payment failed. Please try again.");
+      }
 
     } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong");
+      toast.dismiss("payment");
+      console.error("Payment error:", error);
+      
+      const errorMessage = error.response?.data?.message || error.message || "Something went wrong";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleReset = () => {
+    setForm({
+      name: "",
+      contact: "",
+      category: "",
+      question: ""
+    });
   };
 
   return (
@@ -99,18 +122,37 @@ function ConsultForm({ services }) {
       <h3>Quick Consultation Form</h3>
 
       <label>
-        Name
-        <input type="text" name="name" value={form.name} onChange={handleChange} required />
+        Name *
+        <input 
+          type="text" 
+          name="name" 
+          value={form.name} 
+          onChange={handleChange} 
+          placeholder="Enter your full name"
+          required 
+        />
       </label>
 
       <label>
-        Email or Phone
-        <input type="text" name="contact" value={form.contact} onChange={handleChange} required />
+        Email or Phone *
+        <input 
+          type="text" 
+          name="contact" 
+          value={form.contact} 
+          onChange={handleChange} 
+          placeholder="Enter email or mobile number"
+          required 
+        />
       </label>
 
       <label>
-        Category
-        <select name="category" value={form.category} onChange={handleChange} required>
+        Category *
+        <select 
+          name="category" 
+          value={form.category} 
+          onChange={handleChange} 
+          required
+        >
           <option value="">Choose a category</option>
           {services.map((service) => (
             <option key={service.title} value={service.title}>
@@ -121,13 +163,14 @@ function ConsultForm({ services }) {
       </label>
 
       <label>
-        Your question
+        Your Question *
         <textarea
           name="question"
           value={form.question}
           onChange={handleChange}
           rows="4"
           maxLength="1000"
+          placeholder="Please describe your question in detail (minimum 10 characters)"
           required
         />
       </label>
@@ -139,27 +182,26 @@ function ConsultForm({ services }) {
 
       <div className="form-actions">
         <button
-          type="reset"
+          type="button"
           className="btn-ghost"
-          onClick={() =>
-            setForm({
-              name: "",
-              contact: "",
-              category: "",
-              question: ""
-            })
-          }
+          onClick={handleReset}
+          disabled={loading}
         >
           Reset
         </button>
 
-        <button type="submit" className="btn-primary" disabled={loading}>
-          {loading ? "Processing..." : "Pay & Submit"}
+        <button 
+          type="submit" 
+          className="btn-primary" 
+          disabled={loading}
+        >
+          {loading ? "Processing..." : "Pay ₹21 & Submit"}
         </button>
       </div>
 
       <p className="small">
-        Payment will open a Razorpay checkout. After payment, admin will receive an email.
+        You will be redirected to Cashfree secure payment page. 
+        Payment confirmation happens automatically. ₹21/₹49 + GST.
       </p>
     </form>
   );

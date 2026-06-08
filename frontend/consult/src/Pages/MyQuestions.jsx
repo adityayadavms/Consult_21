@@ -1,37 +1,33 @@
+// src/Pages/MyQuestions.jsx
+
 import { useEffect, useState } from "react";
 import { getMyQuestionsApi } from "../api/questionsApi";
+import SimpleLayout from "../layouts/SimpleLayout";
+import "./myQuestions.css";
 
 function MyQuestions() {
-
   const [questions, setQuestions] = useState([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-
+  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  /*
-  ===============================
-  FETCH QUESTIONS
-  ===============================
-  */
-
   const fetchQuestions = async () => {
     try {
-
       setLoading(true);
-
       const res = await getMyQuestionsApi(page, 10);
-
-      const data = res.data;
-
-      setQuestions(data.content);
-      setTotalPages(data.totalPages);
-
+      
+      // Handle wrapped API response
+      const data = res.data || res;
+      
+      setQuestions(data.content || []);
+      setTotalPages(data.totalPages || 0);
+      setTotalElements(data.totalElements || 0);
+      setError("");
     } catch (err) {
-
+      console.error(err);
       setError("Failed to load questions");
-
     } finally {
       setLoading(false);
     }
@@ -41,72 +37,103 @@ function MyQuestions() {
     fetchQuestions();
   }, [page]);
 
-  /*
-  ===============================
-  UI STATES
-  ===============================
-  */
+  if (loading) {
+    return (
+      <SimpleLayout title="My Questions">
+        <div className="questions-container">
+          <div className="questions-card">
+            <p className="questions-loading">Loading your questions...</p>
+          </div>
+        </div>
+      </SimpleLayout>
+    );
+  }
 
-  if (loading) return <p style={{ padding: "20px" }}>Loading...</p>;
-
-  if (error) return <p style={{ padding: "20px", color: "red" }}>{error}</p>;
+  if (error) {
+    return (
+      <SimpleLayout title="My Questions">
+        <div className="questions-container">
+          <div className="questions-card">
+            <p className="questions-error">{error}</p>
+            <button className="questions-retry-btn" onClick={fetchQuestions}>
+              Try Again
+            </button>
+          </div>
+        </div>
+      </SimpleLayout>
+    );
+  }
 
   return (
-    <div className="container">
+    <SimpleLayout title="My Questions">
+      <div className="questions-container">
+        <div className="questions-card">
+          {/* Count Info */}
+          <div className="questions-header">
+            <p className="questions-count">
+              {totalElements} question{totalElements !== 1 ? "s" : ""} asked
+            </p>
+          </div>
 
-      <h2>My Questions</h2>
-
-      {/* EMPTY STATE */}
-      {questions.length === 0 ? (
-        <p>No questions found.</p>
-      ) : (
-        <>
-          <div style={{ marginTop: "20px" }}>
-
-            {questions.map((q) => (
-              <div
-                key={q.id}
-                style={{
-                  border: "1px solid #333",
-                  padding: "15px",
-                  borderRadius: "10px",
-                  marginBottom: "15px"
-                }}
+          {/* EMPTY STATE */}
+          {questions.length === 0 ? (
+            <div className="questions-empty">
+              <p>No questions asked yet.</p>
+              <button 
+                className="questions-ask-btn"
+                onClick={() => window.location.href = "/#services"}
               >
-                <p><strong>Question:</strong> {q.question}</p>
-                <p style={{ fontSize: "12px", color: "#aaa" }}>
-                  Asked at: {new Date(q.askedAt).toLocaleString()}
-                </p>
+                Ask Your First Question
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* QUESTIONS LIST */}
+              <div className="questions-list">
+                {questions.map((q, index) => (
+                  <div key={q.id} className="question-item">
+                    <div className="question-number">#{index + 1 + page * 10}</div>
+                    <p className="question-text">{q.question}</p>
+                    <p className="question-date">
+                      Asked on {new Date(q.askedAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric"
+                      })}
+                    </p>
+                  </div>
+                ))}
               </div>
-            ))}
 
-          </div>
-
-          {/* PAGINATION */}
-          <div style={{ marginTop: "20px" }}>
-
-            <button
-              onClick={() => setPage((p) => p - 1)}
-              disabled={page === 0}
-            >
-              Prev
-            </button>
-
-            <span style={{ margin: "0 10px" }}>
-              Page {page + 1} of {totalPages}
-            </span>
-
-            <button
-              onClick={() => setPage((p) => p + 1)}
-              disabled={page + 1 >= totalPages}
-            >
-              Next
-            </button>
-
-          </div>
-        </>
-      )}
-    </div>
+              {/* PAGINATION */}
+              {totalPages > 1 && (
+                <div className="questions-pagination">
+                  <button
+                    className="pagination-btn"
+                    onClick={() => setPage((p) => p - 1)}
+                    disabled={page === 0}
+                  >
+                    ← Previous
+                  </button>
+                  
+                  <span className="pagination-info">
+                    Page {page + 1} of {totalPages}
+                  </span>
+                  
+                  <button
+                    className="pagination-btn"
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={page + 1 >= totalPages}
+                  >
+                    Next →
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </SimpleLayout>
   );
 }
 

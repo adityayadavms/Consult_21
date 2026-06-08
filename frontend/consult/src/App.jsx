@@ -16,10 +16,11 @@ import services from "./data/services.json";
 import ProtectedRoute from "./routes/ProtectedRoutes";
 import Profile from "./Pages/Profile";
 import ConsultationLayout from "./layouts/ConsultationLayout";
-
+import SimpleLayout from "./layouts/SimpleLayout";
 import PrivacyPolicy from "./Pages/PrivacyPolicy";
 import TermsConditions from "./Pages/TermsConditions";
 import RefundPolicy from "./Pages/RefundPolicy";
+import PaymentStatus from "./Pages/PaymentStatus";
 
 function HomePage() {
   return (
@@ -88,9 +89,9 @@ function App() {
         path="/questions"
         element={
           <ProtectedRoute>
-            <MainLayout>
+            
               <MyQuestions />
-            </MainLayout>
+            
           </ProtectedRoute>
         }
       />
@@ -111,11 +112,18 @@ function App() {
         path="/profile"
         element={
           <ProtectedRoute>
-            <MainLayout>
+            
               <Profile />
-            </MainLayout>
+            
           </ProtectedRoute>
         }
+      />
+
+      <Route 
+      path="/payment-status" e
+      lement={
+      <PaymentStatus />
+      } 
       />
 
       <Route 

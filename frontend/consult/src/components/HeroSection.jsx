@@ -6,7 +6,7 @@ function HeroSection({ services }) {
       {/* LEFT SIDE */}
       <div className="hero-left">
         <h1>
-          Get trusted advice for life, career, education & relationships — only ₹21
+          Get trusted advice for life, career, education & relationships — only ₹21/₹49
         </h1>
 
         <p className="lead">
@@ -14,14 +14,10 @@ function HeroSection({ services }) {
           thoughtfully and quickly — helping you make confident decisions.
         </p>
 
-        <div className="cta-row">
-          <button className="btn-primary">Consult Now</button>
-          <button className="btn-ghost">Learn More</button>
-        </div>
 
         <div className="stats">
           <div>
-            <strong>₹21</strong>
+            <strong>₹21/₹49</strong>
             <span>Per consult</span>
           </div>
           <div>

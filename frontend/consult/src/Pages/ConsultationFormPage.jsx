@@ -1,55 +1,68 @@
+// src/Pages/ConsultationFormPage.jsx
+
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { getFormTemplateApi } from "../api/formApi";
-import "./consultation.css";
 import {
   submitConsultationApi,
-  createPaymentOrderApi,
-  verifyPaymentApi
+  createPaymentOrderApi
 } from "../api/consultationApi";
-import { loadRazorpay } from "../utils/loadRazorpay";
 import { validateConsultation } from "../utils/validators";
+import { initiateCashfreePayment } from "../utils/cashfree";
+import "./consultation.css";
 
 function ConsultationFormPage() {
-
   const { categoryId } = useParams();
-
+  const navigate = useNavigate();
+  
   const [formSchema, setFormSchema] = useState([]);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   // =============================
-  // FETCH FORM
+  // FETCH FORM TEMPLATE
   // =============================
   useEffect(() => {
-  const fetchForm = async () => {
-    try {
-      const res = await getFormTemplateApi(categoryId);
+    const fetchForm = async () => {
+      try {
+        const res = await getFormTemplateApi(categoryId);
+        console.log("Form template response:", res);
 
-      console.log("API RESPONSE:", res);
+        if (!res || !res.schemaJson) {
+          throw new Error("Invalid API response");
+        }
 
-      if (!res || !res.schemaJson) {
-        throw new Error("Invalid API response");
+        const schema = res.schemaJson;
+        setFormSchema(schema.sections || []);
+        
+        // Initialize form data with empty values
+        const initialData = {};
+        (schema.sections || []).forEach(section => {
+          section.fields?.forEach(field => {
+            if (field.type === "multiselect") {
+              initialData[field.key] = [];
+            } else {
+              initialData[field.key] = "";
+            }
+          });
+        });
+        setFormData(initialData);
+        
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load form");
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const schema = res.schemaJson;
-
-      setFormSchema(schema.sections || []);
-
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load form");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchForm();
-}, [categoryId]);
+    fetchForm();
+  }, [categoryId]);
 
   // =============================
-  // HANDLE CHANGE
+  // HANDLE FORM FIELD CHANGE
   // =============================
   const handleChange = (key, value) => {
     setFormData((prev) => ({
@@ -59,11 +72,10 @@ function ConsultationFormPage() {
   };
 
   // =============================
-  // RENDER FIELD (CLEAN)
+  // RENDER FORM FIELD
   // =============================
   const renderField = (field) => {
     switch (field.type) {
-
       case "text":
       case "email":
       case "number":
@@ -72,6 +84,7 @@ function ConsultationFormPage() {
             type={field.type}
             value={formData[field.key] || ""}
             onChange={(e) => handleChange(field.key, e.target.value)}
+            placeholder={field.placeholder || ""}
           />
         );
 
@@ -80,6 +93,8 @@ function ConsultationFormPage() {
           <textarea
             value={formData[field.key] || ""}
             onChange={(e) => handleChange(field.key, e.target.value)}
+            placeholder={field.placeholder || ""}
+            rows={4}
           />
         );
 
@@ -89,7 +104,7 @@ function ConsultationFormPage() {
             value={formData[field.key] || ""}
             onChange={(e) => handleChange(field.key, e.target.value)}
           >
-            <option value="">Select</option>
+            <option value="">Select {field.label}</option>
             {field.options?.map((opt) => (
               <option key={opt} value={opt}>
                 {opt}
@@ -127,140 +142,138 @@ function ConsultationFormPage() {
         );
 
       default:
-        return <p>Unsupported field: {field.type}</p>;
+        return <p className="text-red-500">Unsupported field: {field.type}</p>;
     }
   };
 
   // =============================
-  // SUBMIT
+  // HANDLE FORM SUBMIT
   // =============================
   const handleSubmit = async () => {
-
-    // flatten fields for validation
-    const allFields = formSchema.flatMap(section => section.fields);
-
+    // Flatten all fields for validation
+    const allFields = formSchema.flatMap(section => section.fields || []);
+    
+    // Validate form
     const error = validateConsultation(formData, allFields);
-
     if (error) {
       toast.error(error);
       return;
     }
 
     try {
-      setLoading(true);
+      setSubmitting(true);
+      toast.loading("Submitting consultation...", { id: "payment" });
 
+      // STEP 1: Submit consultation form
       const consultationRes = await submitConsultationApi({
         categoryId: Number(categoryId),
         answers: formData
       });
 
       const consultationId = consultationRes.consultationId;
+      console.log("Consultation submitted:", consultationId);
 
-      const orderRes = await createPaymentOrderApi(consultationId);
+      toast.loading("Creating payment order...", { id: "payment" });
 
-      const { razorpayOrderId, amount } = orderRes;
+      // STEP 2: Create payment order
+      const idempotencyKey = crypto.randomUUID();
+      const paymentOrder = await createPaymentOrderApi(consultationId, idempotencyKey);
+      
+      const { orderId, paymentSessionId } = paymentOrder;
+      console.log("Payment order created:", { orderId, paymentSessionId });
 
-      const isLoaded = await loadRazorpay();
+      toast.loading("Opening payment window...", { id: "payment" });
 
-      if (!isLoaded) {
-        toast.error("Razorpay failed to load");
-        return;
+      // STEP 3: Initiate Cashfree hosted checkout
+      const result = await initiateCashfreePayment(paymentSessionId, orderId);
+
+      toast.dismiss("payment");
+
+      // STEP 4: Handle result
+      if (result.success) {
+        if (result.redirect) {
+          toast.success("Redirecting to payment...");
+        } else {
+          toast.success("Payment initiated! We'll notify you once confirmed.");
+          setTimeout(() => {
+            navigate("/questions");
+          }, 2000);
+        }
+      } else {
+        toast.error(result.error || "Payment failed. Please try again.");
       }
 
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY,
-        amount,
-        currency: "INR",
-        name: "Consult21",
-        order_id: razorpayOrderId,
-
-        handler: async function (response) {
-          try {
-            await verifyPaymentApi({
-              consultationId,
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature
-            });
-
-            toast.success("Consultation submitted successfully");
-
-          } catch {
-            toast.error("Payment verification failed");
-          } finally {
-            setLoading(false);
-          }
-        },
-
-        modal: {
-          ondismiss: function () {
-            toast("Payment cancelled");
-            setLoading(false);
-          }
-        }
-      };
-
-      const rzp = new window.Razorpay(options);
-
-      rzp.on("payment.failed", function () {
-        toast.error("Payment failed");
-        setLoading(false);
-      });
-
-      rzp.open();
-
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Something went wrong"
-      );
-      setLoading(false);
+      toast.dismiss("payment");
+      console.error("Submission error:", error);
+      
+      const errorMessage = error.response?.data?.message || "Something went wrong";
+      toast.error(errorMessage);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   // =============================
-  // UI
+  // LOADING STATE
   // =============================
-  if (loading) return <p className="consult-loading">Loading form...</p>;
-
-if (!formSchema.length) {
-  return <p className="consult-loading">No form available</p>;
-}
-
-return (
-  <div className="consult-container">
-    <div className="consult-card">
-
-      <h2 className="consult-title">Consultation Form</h2>
-
-      {formSchema.map((section) => (
-        <div key={section.section} className="consult-section">
-
-          <h3>{section.section}</h3>
-
-          {section.fields.map((field) => (
-            <div key={field.key} className="consult-field">
-
-              <label>{field.label}</label>
-
-              {renderField(field)}
-
-            </div>
-          ))}
-
+  if (loading) {
+    return (
+      <div className="consult-container">
+        <div className="consult-card" style={{ textAlign: "center" }}>
+          <p>Loading form...</p>
         </div>
-      ))}
+      </div>
+    );
+  }
 
-      <button
-        className="consult-btn"
-        onClick={handleSubmit}
-        disabled={loading}
-      >
-        {loading ? "Processing..." : "Submit Consultation"}
-      </button>
+  if (!formSchema.length) {
+    return (
+      <div className="consult-container">
+        <div className="consult-card" style={{ textAlign: "center" }}>
+          <p>No form available for this category.</p>
+          <button className="btn-primary" onClick={() => navigate("/")}>
+            Go Back Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
+  return (
+    <div className="consult-container">
+      <div className="consult-card">
+        <h2 className="consult-title">Consultation Form</h2>
+        <p className="price-row" style={{ marginBottom: "20px" }}>
+          Consultation Fee: <strong>₹49</strong>
+        </p>
+
+        {formSchema.map((section, sectionIdx) => (
+          <div key={sectionIdx} className="consult-section">
+            <h3>{section.section}</h3>
+            
+            {section.fields?.map((field) => (
+              <div key={field.key} className="consult-field">
+                <label>
+                  {field.label}
+                  {field.required && <span style={{ color: "#ff6a00" }}> *</span>}
+                </label>
+                {renderField(field)}
+              </div>
+            ))}
+          </div>
+        ))}
+
+        <button
+          className="consult-btn"
+          onClick={handleSubmit}
+          disabled={submitting}
+        >
+          {submitting ? "Processing..." : "Pay ₹49 & Submit Consultation"}
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
 }
 
 export default ConsultationFormPage;

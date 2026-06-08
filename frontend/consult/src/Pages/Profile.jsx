@@ -1,3 +1,5 @@
+// src/Pages/Profile.jsx
+
 import { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { updateProfileApi } from "../api/userApi";
@@ -5,28 +7,21 @@ import { validateProfile } from "../utils/validators";
 import toast from "react-hot-toast";
 import OtpModal from "../components/OtpModal";
 import { requestPhoneUpdateApi } from "../api/userApi";
+import SimpleLayout from "../layouts/SimpleLayout";
+import "./profile.css"; // We'll create this
 
 function Profile() {
-
   const { user, logout, updateUser } = useContext(AuthContext);
 
   const [isEditing, setIsEditing] = useState(false);
-
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [pendingPhone, setPendingPhone] = useState("");
-
   const [form, setForm] = useState({
     name: user?.name || "",
     phone: user?.phone || ""
   });
-
   const [loading, setLoading] = useState(false);
 
-  /*
-  ===============================
-  HANDLE INPUT
-  ===============================
-  */
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -34,167 +29,114 @@ function Profile() {
     });
   };
 
-  /*
-  ===============================
-  HANDLE SAVE
-  ===============================
-  */
   const handleSave = async () => {
-
     const error = validateProfile(form);
-
     if (error) {
       toast.error(error);
       return;
     }
 
-    /*
-    ===============================
-    IF PHONE CHANGED → OTP FLOW
-    ===============================
-    */
-
+    // If phone changed → OTP flow
     if (form.phone !== user.phone) {
-
       try {
-
         setLoading(true);
-
         await requestPhoneUpdateApi(form.phone);
-
         toast.success("OTP sent to your phone");
-
         setPendingPhone(form.phone);
         setShowOtpModal(true);
-
       } catch (err) {
-
         toast.error("Failed to send OTP");
-
       } finally {
         setLoading(false);
       }
-
       return;
     }
 
-    /*
-    ===============================
-    NORMAL UPDATE (NO PHONE CHANGE)
-    ===============================
-    */
-
+    // Normal update (no phone change)
     try {
-
       setLoading(true);
-
       const updatedUser = await updateProfileApi(form);
-
       updateUser(updatedUser);
-
       toast.success("Profile updated");
-
+      setIsEditing(false);
     } catch {
-
       toast.error("Update failed");
-
     } finally {
       setLoading(false);
-      setIsEditing(false);
     }
   };
 
   return (
-    <>
-      <div className="container" style={{ display: "flex", justifyContent: "center" }}>
-
-        <div
-          style={{
-            width: "100%",
-            maxWidth: "500px",
-            background: "rgba(17, 24, 39, 0.75)",
-            backdropFilter: "blur(14px)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
-            borderRadius: "20px",
-            padding: "30px",
-            boxShadow: "0 20px 45px rgba(0, 0, 0, 0.6)"
-          }}
-        >
-
-          {/* TITLE */}
-          <h2 style={{ marginBottom: "25px", textAlign: "center" }}>
-            👤 My Profile
-          </h2>
-
+    <SimpleLayout title="My Profile">
+      <div className="profile-container">
+        <div className="profile-card">
           {/* NAME */}
-          <div style={{ marginBottom: "20px" }}>
-            <label style={{ color: "#9ca3af", fontSize: "14px" }}>Name</label>
-
+          <div className="profile-field">
+            <label>Name</label>
             {isEditing ? (
               <input
                 name="name"
                 value={form.name}
                 onChange={handleChange}
-                className="auth-input"
+                className="profile-input"
               />
             ) : (
-              <p style={{ fontSize: "16px" }}>{user?.name}</p>
+              <p className="profile-value">{user?.name || "Not set"}</p>
             )}
           </div>
 
-          {/* EMAIL */}
-          <div style={{ marginBottom: "20px" }}>
-            <label style={{ color: "#9ca3af", fontSize: "14px" }}>Email</label>
-            <p style={{ fontSize: "16px" }}>{user?.email}</p>
+          {/* EMAIL (Read-only) */}
+          <div className="profile-field">
+            <label>Email</label>
+            <p className="profile-value profile-email">{user?.email}</p>
           </div>
 
           {/* PHONE */}
-          <div style={{ marginBottom: "20px" }}>
-            <label style={{ color: "#9ca3af", fontSize: "14px" }}>Phone</label>
-
+          <div className="profile-field">
+            <label>Phone</label>
             {isEditing ? (
               <input
                 name="phone"
                 value={form.phone}
                 onChange={handleChange}
-                className="auth-input"
+                className="profile-input"
+                placeholder="Enter 10-digit mobile number"
+                maxLength="10"
               />
             ) : (
-              <p style={{ fontSize: "16px" }}>
+              <p className="profile-value">
                 {user?.phone || "Not added"}
               </p>
             )}
           </div>
 
           {/* ACTION BUTTONS */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginTop: "30px"
-            }}
-          >
-
+          <div className="profile-actions">
             {!isEditing ? (
               <button
-                className="btn-primary"
+                className="profile-btn-primary"
                 onClick={() => setIsEditing(true)}
               >
                 Edit Profile
               </button>
             ) : (
-              <div style={{ display: "flex", gap: "10px" }}>
+              <div className="profile-btn-group">
                 <button
-                  className="btn-primary"
+                  className="profile-btn-primary"
                   onClick={handleSave}
                   disabled={loading}
                 >
-                  {loading ? "Saving..." : "Save"}
+                  {loading ? "Saving..." : "Save Changes"}
                 </button>
-
                 <button
-                  className="btn-ghost"
-                  onClick={() => setIsEditing(false)}
+                  className="profile-btn-secondary"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setForm({
+                      name: user?.name || "",
+                      phone: user?.phone || ""
+                    });
+                  }}
                 >
                   Cancel
                 </button>
@@ -202,30 +144,34 @@ function Profile() {
             )}
 
             <button
-              className="btn-ghost"
+              className="profile-btn-danger"
               onClick={logout}
             >
               Logout
             </button>
-
           </div>
-
         </div>
       </div>
 
-      {/* ===============================
-          OTP MODAL (OUTSIDE CARD)
-      =============================== */}
+      {/* OTP MODAL */}
       {showOtpModal && (
         <OtpModal
-          onClose={() => setShowOtpModal(false)}
+          phone={pendingPhone}
+          onClose={() => {
+            setShowOtpModal(false);
+            setPendingPhone("");
+            // Reset form phone to original
+            setForm(prev => ({ ...prev, phone: user?.phone || "" }));
+          }}
           onSuccess={(updatedUser) => {
             updateUser(updatedUser);
             setIsEditing(false);
+            setShowOtpModal(false);
+            setPendingPhone("");
           }}
         />
       )}
-    </>
+    </SimpleLayout>
   );
 }
 
