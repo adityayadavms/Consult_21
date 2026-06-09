@@ -1,58 +1,58 @@
 [
   {
     "id": 1,
-    "title": "Career",
+    "title": "Career Advice",
     "brief": "Growth, resume help, interview prep, and career transitions."
   },
   {
     "id": 2,
-    "title": "Education",
+    "title": "Education Guidance",
     "brief": "Course selection, admissions, higher studies, scholarships."
   },
-  
+ 
   {
     "id": 4,
-    "title": "Personal & Emotional Well-Being",
+    "title": "Personal and Emotional Well-Being",
     "brief": "Stress, burnout, confidence and emotional resilience."
   },
   {
     "id": 5,
-    "title": "Finance & Money Management",
+    "title": "Finance and Money Management",
     "brief": "Budgeting, saving, investments and debt planning."
   },
   {
     "id": 6,
-    "title": "Business & Entrepreneurship",
+    "title": "Business and Entrepreneurship",
     "brief": "Startup advice, business model, and growth strategy."
   },
   {
     "id": 7,
-    "title": "Relationships & Family",
+    "title": "Relationships and Family",
     "brief": "Communication, conflict resolution and relationship support."
   },
   {
     "id": 8,
-    "title": "Legal & Documentation Guidance (Non-Legal)",
+    "title": "Legal and Documentation Guidance (Non-Legal)",
     "brief": "Help with GST, MCA, Startup India forms and documentation."
   },
   {
     "id": 9,
-    "title": "Health & Fitness Guidance",
+    "title": "Health and Fitness Guidance",
     "brief": "Lifestyle, small routines, and fitness tips (non-medical)."
   },
   {
     "id": 10,
-    "title": "Self-Improvement & Motivation",
+    "title": "Self-Improvement Motivation",
     "brief": "Goal-setting, productivity, habit-building and discipline."
   },
   {
     "id": 11,
-    "title": "Technology & Digital Help",
+    "title": "Technology and Digital Help",
     "brief": "Using apps, online tools, remote-work tips, and digital safety."
   },
   {
     "id": 12,
-    "title": "Travel & Relocation",
+    "title": "Travel and Relocation",
     "brief": "Study/work abroad planning, visas, budgets and checklists."
   },
   {

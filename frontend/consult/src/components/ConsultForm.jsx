@@ -15,7 +15,7 @@ function ConsultForm({ services }) {
   const [form, setForm] = useState({
     name: "",
     contact: "",
-    category: "",
+    categoryId: "",  
     question: ""
   });
   
@@ -40,7 +40,7 @@ function ConsultForm({ services }) {
       toast.error("Please enter email or phone");
       return;
     }
-    if (!form.category) {
+    if (!form.categoryId) {
       toast.error("Please select a category");
       return;
     }
@@ -53,11 +53,11 @@ function ConsultForm({ services }) {
       setLoading(true);
       toast.loading("Creating consultation...", { id: "payment" });
 
-      // STEP 1: Create quick consultation
+      // STEP 1: Create quick consultation with categoryId
       const consultationResult = await createQuickConsultationApi({
         name: form.name,
         emailOrPhone: form.contact,
-        category: form.category,
+        categoryId: parseInt(form.categoryId),  
         question: form.question
       });
 
@@ -83,12 +83,9 @@ function ConsultForm({ services }) {
       // STEP 4: Handle result
       if (result.success) {
         if (result.redirect) {
-          // Cashfree will redirect automatically
           toast.success("Redirecting to payment...");
         } else {
-          // Payment completed inline (some UPI methods)
           toast.success("Payment initiated! We'll notify you once confirmed.");
-          // Redirect to my questions page after short delay
           setTimeout(() => {
             navigate("/questions");
           }, 2000);
@@ -112,7 +109,7 @@ function ConsultForm({ services }) {
     setForm({
       name: "",
       contact: "",
-      category: "",
+      categoryId: "",
       question: ""
     });
   };
@@ -148,14 +145,14 @@ function ConsultForm({ services }) {
       <label>
         Category *
         <select 
-          name="category" 
-          value={form.category} 
+          name="categoryId"  
+          value={form.categoryId} 
           onChange={handleChange} 
           required
         >
           <option value="">Choose a category</option>
           {services.map((service) => (
-            <option key={service.title} value={service.title}>
+            <option key={service.id} value={service.id}>  
               {service.title}
             </option>
           ))}
@@ -201,7 +198,7 @@ function ConsultForm({ services }) {
 
       <p className="small">
         You will be redirected to Cashfree secure payment page. 
-        Payment confirmation happens automatically. ₹21/₹49 + GST.
+        Payment confirmation happens automatically. ₹21 + GST.
       </p>
     </form>
   );

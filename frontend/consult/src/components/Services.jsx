@@ -20,7 +20,7 @@ function Services() {
       <h2>Our Services</h2>
 
       <p className="subtitle">
-        Choose from 13 expert consultation categories — all at ₹21 per consult.
+        Choose from 12 expert consultation categories — all at ₹49 per consult.
       </p>
 
       <div className="grid">

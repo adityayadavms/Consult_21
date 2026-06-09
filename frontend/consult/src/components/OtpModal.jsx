@@ -133,7 +133,7 @@ function OtpModal({ onClose, onSuccess, phone }) {
 
         setResendLoading(true);
 
-        await resendPhoneOtpApi(); // ✅ correct endpoint
+        await resendPhoneOtpApi(); //  correct endpoint
 
         toast.success("OTP resent");
 

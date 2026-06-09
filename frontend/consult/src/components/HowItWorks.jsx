@@ -16,7 +16,7 @@ function HowItWorks() {
 
         <div className="step">
           <span>3</span>
-          <p>Pay ₹21</p>
+          <p>Pay ₹21 or ₹48 </p>
         </div>
 
         <div className="step">
