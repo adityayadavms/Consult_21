@@ -13,6 +13,6 @@ public class QuickConsultationRequestDto {
 
     private String name;
     private String emailOrPhone;
-    private String category;
+    private long categoryId;
     private String question;
 }
