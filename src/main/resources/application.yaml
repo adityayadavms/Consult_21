@@ -74,9 +74,9 @@ logging:
 
 
 cashfree:
-  appid : ${CASHFREE_APPLICATION_ID}
-  secret_key : ${CASHFREE_SECRET_ID}
-  baseUrl: ${CASHFREE_BASE_URL}
+  appid: ${CASHFREE_APPLICATION_ID}
+  secret-key: ${CASHFREE_SECRET_ID}
+  base-url: ${CASHFREE_BASE_URL}
 
 
 

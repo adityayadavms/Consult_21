@@ -6,7 +6,9 @@ import com.consult.backend.dto.CashfreeCustomerDetails;
 import com.consult.backend.dto.CashfreeOrderResponse;
 
 import com.consult.backend.exception.CashFreeException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -16,6 +18,7 @@ import com.consult.backend.Configuration.CashFreeConfig;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CashFreeService {
 
     private static final String API_VERSION = "2025-01-01";
@@ -24,11 +27,23 @@ public class CashFreeService {
 
     private final CashFreeConfig cashfreeConfig;
 
+    private final ObjectMapper objectMapper;
+
+    private String sanitizeCustomerId(String email) {
+        if (email == null) return null;
+        // Replace @ with _at_ and . with _
+        return email
+                .replace("@", "_at_")
+                .replace(".", "_");
+    }
 
     public CashfreeCreateOrderResponse createOrder(String internalOrderId, Double amount,
             String customerEmail,
-            String customerName
+            String customerName, String customerPhone
     ) {
+
+        String customerId = sanitizeCustomerId(customerEmail);
+
 
         CashfreeCreateOrderRequest request =
                 CashfreeCreateOrderRequest.builder()
@@ -39,62 +54,36 @@ public class CashFreeService {
 
                         .orderCurrency("INR")
 
-                        .customerDetails(
-
-                                CashfreeCustomerDetails
+                        .customerDetails(CashfreeCustomerDetails
                                         .builder()
-
-                                        .customerId(
-                                                customerEmail
-                                        )
-
-                                        .customerName(
-                                                customerName
-                                        )
-
-                                        .customerEmail(
-                                                customerEmail
-                                        )
-
+                                        .customerId(customerId)
+                                        .customerName(customerName)
+                                        .customerPhone(customerPhone)
                                         .build()
-
                         )
 
                         .build();
 
+        try {
+            log.info("Cashfree Create Order Request: {}", objectMapper.writeValueAsString(request));
+        } catch (Exception e) {
+            log.error("Failed to serialize request: {}", e.getMessage());
+            log.info("Cashfree Create Order Request: (serialization failed)");
+        }
+
         return cashfreeWebClient
 
                 .post()
-
                 .uri("/orders")
-
-                .header(
-                        "x-client-id",
-                        cashfreeConfig.getAppId()
-                )
-
-                .header(
-                        "x-client-secret",
-                        cashfreeConfig.getSecretKey()
-                )
-
-                .header(
-                        "x-api-version",
-                        API_VERSION
-                )
-
+                .header("x-client-id", cashfreeConfig.getAppId())
+                .header("x-client-secret", cashfreeConfig.getSecretKey())
+                .header("x-api-version", API_VERSION)
                 .bodyValue(request)
-
                 .retrieve()
-
                 .onStatus(
-
                         HttpStatusCode::is4xxClientError,
-
                         response ->
-
                                 response.bodyToMono(String.class)
-
                                         .map(body ->
                                                 new CashFreeException(
                                                         "CashFree Client Error: "
@@ -103,10 +92,7 @@ public class CashFreeService {
                                         )
                 )
 
-                .bodyToMono(
-                        CashfreeCreateOrderResponse.class
-                )
-
+                .bodyToMono(CashfreeCreateOrderResponse.class)
                 .block();
     }
 
@@ -115,33 +101,13 @@ public class CashFreeService {
         return cashfreeWebClient
 
                 .get()
-
-                .uri("/orders/{orderId}",
-                        cashfreeOrderId)
-
-                .header(
-                        "x-client-id",
-                        cashfreeConfig.getAppId()
-                )
-
-                .header(
-                        "x-client-secret",
-                        cashfreeConfig.getSecretKey()
-                )
-
-                .header(
-                        "x-api-version",
-                        API_VERSION
-                )
-
+                .uri("/orders/{orderId}", cashfreeOrderId)
+                .header("x-client-id", cashfreeConfig.getAppId())
+                .header("x-client-secret", cashfreeConfig.getSecretKey())
+                .header("x-api-version", API_VERSION)
                 .retrieve()
-
-
-
                 .onStatus(
-
                         HttpStatusCode::is4xxClientError,
-
                         response -> response.bodyToMono(String.class).map(body ->
                                                 new CashFreeException(
                                                         "Cashfree Server Error: "
@@ -149,13 +115,11 @@ public class CashFreeService {
                                                 )
                                         )
                 )
-
-                .bodyToMono(
-                        CashfreeOrderResponse.class
-                )
-
+                .bodyToMono(CashfreeOrderResponse.class)
                 .block();
     }
+
+
     public CashfreeOrderResponse verifyOrder(
             String orderId
     ) {

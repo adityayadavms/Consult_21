@@ -54,8 +54,7 @@ public class ConsultationService {
         validateQuestion(dto.getAnswers());
 
         // STEP 5 — SAVE CONSULTATION
-        ConsultationRequest consultation =
-                ConsultationRequest.builder()
+        ConsultationRequest consultation = ConsultationRequest.builder()
                         .user(user)
                         .category(category)
                         .answersJson(dto.getAnswers())
@@ -67,12 +66,8 @@ public class ConsultationService {
 
         // STEP 6 — RESPONSE
         return SubmitConsultationResponseDto.builder()
-                .consultationId(
-                        consultation.getId()
-                )
-                .message(
-                        "Consultation submitted successfully"
-                )
+                .consultationId(consultation.getId())
+                .message("Consultation submitted successfully")
                 .build();
     }
 

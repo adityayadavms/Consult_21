@@ -188,14 +188,23 @@ public class PaymentService {
                     pricingService.calculateAmount(
                             consultation
                     );
+            // Get user's phone from consultation
+            String customerPhone = consultation.getContactInfo(); // This now contains phone
 
-            CashfreeCreateOrderResponse cashfreeResponse =
-                    cashfreeService.createOrder(
-                            internalOrderId,
-                            amount,
-                            consultation.getUser().getEmail(),
-                            consultation.getUser().getName()
-                    );
+           // Validate phone exists
+            if (customerPhone == null || customerPhone.isEmpty()) {
+                log.warn("Phone number missing for user: {}", consultation.getUser().getEmail());
+                // You might want to throw an exception here
+                throw new RuntimeException("Phone number is required for payment");
+            }
+
+            CashfreeCreateOrderResponse cashfreeResponse = cashfreeService.createOrder(
+                    internalOrderId,
+                    amount,
+                    consultation.getUser().getEmail(),
+                    consultation.getUser().getName(),
+                    customerPhone  // Pass the phone number
+            );
 
             /*
             =========================================

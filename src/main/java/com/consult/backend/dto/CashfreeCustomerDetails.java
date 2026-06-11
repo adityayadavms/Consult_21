@@ -1,5 +1,6 @@
 package com.consult.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Getter
@@ -8,9 +9,12 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CashfreeCustomerDetails {
+    @JsonProperty("customer_id")
     private String customerId;
 
+    @JsonProperty("customer_name")
     private String customerName;
 
-    private String customerEmail;
+    @JsonProperty("customer_phone")
+    private String customerPhone;
 }

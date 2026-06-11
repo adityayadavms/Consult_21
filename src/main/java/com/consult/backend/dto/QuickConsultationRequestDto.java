@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class QuickConsultationRequestDto {
 
     private String name;
-    private String emailOrPhone;
+    private String phone;
     private long categoryId;
     private String question;
 }

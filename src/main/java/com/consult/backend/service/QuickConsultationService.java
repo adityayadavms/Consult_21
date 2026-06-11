@@ -47,12 +47,16 @@ public class QuickConsultationService {
                 throw new RuntimeException("Question is required");
             }
 
+            if (dto.getPhone() == null || dto.getPhone().trim().isEmpty()) {
+                throw new RuntimeException("Phone number is required");
+            }
+
             // STEP 4 — CREATE CONSULTATION
             ConsultationRequest consultation = ConsultationRequest.builder()
                     .user(user)
                     .category(category)
                     .quickQuestion(dto.getQuestion())
-                    .contactInfo(dto.getEmailOrPhone())
+                    .contactInfo(dto.getPhone())
                     .name(dto.getName())
                     .answersJson(new HashMap<>())  // Empty map instead of null
                     .build();
