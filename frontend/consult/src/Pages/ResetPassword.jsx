@@ -62,7 +62,7 @@ function ResetPassword() {
 
     try {
 
-      await resetPasswordApi(email, otp, password);
+      await resetPasswordApi({ email, newPassword: password });
 
       toast.success("Password reset successfully ");
 

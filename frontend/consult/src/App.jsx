@@ -21,6 +21,7 @@ import PrivacyPolicy from "./Pages/PrivacyPolicy";
 import TermsConditions from "./Pages/TermsConditions";
 import RefundPolicy from "./Pages/RefundPolicy";
 import PaymentStatus from "./Pages/PaymentStatus";
+import ResetPassword from "./Pages/ResetPassword";
 
 function HomePage() {
   return (
@@ -84,6 +85,15 @@ function App() {
         </AuthLayout>
       }
       />
+
+      <Route
+          path="/reset-password"
+          element={
+            <AuthLayout>
+              <ResetPassword />
+            </AuthLayout>
+          }
+        />
       
       <Route
         path="/questions"

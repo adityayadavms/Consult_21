@@ -14,7 +14,7 @@ function ConsultForm({ services }) {
   
   const [form, setForm] = useState({
     name: "",
-    contact: "",
+    phone: "",
     categoryId: "",  
     question: ""
   });
@@ -36,8 +36,13 @@ function ConsultForm({ services }) {
       toast.error("Please enter your name");
       return;
     }
-    if (!form.contact.trim()) {
-      toast.error("Please enter email or phone");
+     const phoneRegex = /^[6-9]\d{9}$/;
+    if (!form.phone.trim()) {
+      toast.error("Please enter your phone number");
+      return;
+    }
+    if (!phoneRegex.test(form.phone)) {
+      toast.error("Please enter a valid 10-digit phone number");
       return;
     }
     if (!form.categoryId) {
@@ -56,7 +61,7 @@ function ConsultForm({ services }) {
       // STEP 1: Create quick consultation with categoryId
       const consultationResult = await createQuickConsultationApi({
         name: form.name,
-        emailOrPhone: form.contact,
+        phone: form.phone,
         categoryId: parseInt(form.categoryId),  
         question: form.question
       });
@@ -108,7 +113,7 @@ function ConsultForm({ services }) {
   const handleReset = () => {
     setForm({
       name: "",
-      contact: "",
+      phone: "",
       categoryId: "",
       question: ""
     });
@@ -131,13 +136,14 @@ function ConsultForm({ services }) {
       </label>
 
       <label>
-        Email or Phone *
+        Phone *
         <input 
-          type="text" 
-          name="contact" 
-          value={form.contact} 
+          type="tel" 
+          name="phone" 
+          value={form.phone} 
           onChange={handleChange} 
-          placeholder="Enter email or mobile number"
+          placeholder="Enter 10-digit mobile number"
+          maxLength="10"
           required 
         />
       </label>
