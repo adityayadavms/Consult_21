@@ -53,9 +53,16 @@ public class ConsultationService {
         // STEP 4 — Validate QUESTION
         validateQuestion(dto.getAnswers());
 
-        // STEP 5 — SAVE CONSULTATION
+        // Step 5 - Checking if phone no. exists
+        if(user.getPhone()==null || user.getPhone().trim().isEmpty()){
+           throw new RuntimeException("Phone number is required");
+        }
+
+        // STEP 6 — SAVE CONSULTATION
         ConsultationRequest consultation = ConsultationRequest.builder()
                         .user(user)
+                        .email(email)
+                        .phone(user.getPhone())
                         .category(category)
                         .answersJson(dto.getAnswers())
                         .build();

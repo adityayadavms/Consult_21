@@ -70,7 +70,9 @@ public class ConsultationRequest {
     @Column(length=2000)
     private String quickQuestion;
 
-    private String contactInfo;
+    private String email;
+
+    private String phone;
 
     private String name;
 

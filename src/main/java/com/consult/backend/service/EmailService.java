@@ -80,9 +80,9 @@ public class EmailService {
                 emailBody.append("Name: ").append(consultation.getName()).append("\n");
             }
 
-            if (consultation.getContactInfo() != null) {
+            if (consultation.getPhone() != null) {
                 emailBody.append("Contact Info (User Input): ")
-                        .append(consultation.getContactInfo())
+                        .append(consultation.getPhone())
                         .append("\n");
             }
 
@@ -119,7 +119,8 @@ public class EmailService {
     private String formatQuickConsultation(ConsultationRequest consultation) {
 
         return "Name : " + consultation.getName() + "\n" +
-                "Contact : " + consultation.getContactInfo() + "\n" +
+                "Phone : " + consultation.getPhone() + "\n" +
+                "E-mail :" + consultation.getEmail()+ "\n" +
                 "Question : " + consultation.getQuickQuestion() + "\n";
     }
     /*

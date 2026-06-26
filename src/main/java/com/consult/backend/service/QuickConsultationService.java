@@ -56,8 +56,10 @@ public class QuickConsultationService {
                     .user(user)
                     .category(category)
                     .quickQuestion(dto.getQuestion())
-                    .contactInfo(dto.getPhone())
+                    .phone(dto.getPhone())
+                    .email(email)
                     .name(dto.getName())
+
                     .answersJson(new HashMap<>())  // Empty map instead of null
                     .build();
 

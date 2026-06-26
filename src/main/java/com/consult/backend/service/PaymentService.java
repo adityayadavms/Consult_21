@@ -189,7 +189,7 @@ public class PaymentService {
                             consultation
                     );
             // Get user's phone from consultation
-            String customerPhone = consultation.getContactInfo(); // This now contains phone
+            String customerPhone = consultation.getPhone(); // This now contains phone
 
            // Validate phone exists
             if (customerPhone == null || customerPhone.isEmpty()) {
