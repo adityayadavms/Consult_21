@@ -3,6 +3,8 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 function Login() {
 
@@ -67,7 +69,7 @@ function Login() {
             className="eye-icon"
             onClick={() => setShowPassword(!showPassword)}
           >
-            {showPassword ? "🙈" : "👁"}
+          <FontAwesomeIcon icon={showPassword ? faEye : faEyeSlash} size="sm"/>
           </span>
 
         </div>

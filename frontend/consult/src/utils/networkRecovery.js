@@ -60,8 +60,7 @@ function removeExpiredRequests() {
 
     requestQueue = requestQueue.filter(
 
-        request =>
-            (now - request.timestamp) < REQUEST_TTL
+        request => (now - request.timestamp) < REQUEST_TTL
 
     );
 
@@ -94,10 +93,7 @@ export function queueRequest(request) {
 
     if (alreadyExists) {
 
-        console.log(
-            "Duplicate request ignored:",
-            request.url
-        );
+        console.log("Duplicate request ignored:",request.url);
 
         return;
 
@@ -257,18 +253,14 @@ export async function retryQueuedRequests() {
 
     const requests = getRetriableRequests();
 
-    console.log(
-        `Retrying ${requests.length} queued requests`
-    );
+    console.log(`Retrying ${requests.length} queued requests`);
 
     for (const request of requests) {
 
         try {
 
             if (!requestExecutor) {
-                throw new Error(
-                    "Request executor not registered"
-                );
+                throw new Error("Request executor not registered");
             }
 
             await requestExecutor({
@@ -292,10 +284,7 @@ export async function retryQueuedRequests() {
 
             removeRequest(request.id);
 
-            console.log(
-                "Request succeeded:",
-                request.url
-            );
+            console.log(  "Request succeeded:", request.url);
 
         }
 
@@ -307,14 +296,9 @@ export async function retryQueuedRequests() {
             ===============================
             */
 
-            incrementRetry(
-                request.id
-            );
+            incrementRetry( request.id );
 
-            console.log(
-                "Retry failed:",
-                request.url
-            );
+            console.log("Retry failed:",request.url);
 
         }
 

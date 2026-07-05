@@ -56,10 +56,7 @@ export const refreshTokenApi = async () => {
   =============================
   */
 
-  const {
-    accessToken,
-    refreshToken: newRefreshToken
-  } = response.data.data;
+  const {accessToken, refreshToken: newRefreshToken} = response.data.data;
 
   /*
   =============================
@@ -67,15 +64,9 @@ export const refreshTokenApi = async () => {
   =============================
   */
 
-  localStorage.setItem(
-    "accessToken",
-    accessToken
-  );
+  localStorage.setItem("accessToken", accessToken);
 
-  localStorage.setItem(
-    "refreshToken",
-    newRefreshToken
-  );
+  localStorage.setItem( "refreshToken", newRefreshToken);
 
   /*
   =============================
@@ -103,9 +94,7 @@ FORGOT PASSWORD
 */
 
 export const forgotPasswordApi = async (email) => {
-  const response = await axiosClient.post("/auth/forgot-password", {
-    email,
-  });
+  const response = await axiosClient.post("/auth/forgot-password", {email});
 
   return response.data;
 };
@@ -117,10 +106,7 @@ VERIFY OTP
 */
 
 export const verifyOtpApi = async (email, otp) => {
-  const response = await axiosClient.post("/auth/verify-otp", {
-    email,
-    otp,
-  });
+  const response = await axiosClient.post("/auth/verify-otp", { email, otp,});
 
   return response.data;
 };
@@ -132,9 +118,7 @@ RESEND OTP
 */
 
 export const resendOtpApi = async (email) => {
-  const response = await axiosClient.post("/auth/resend-otp", {
-    email,
-  });
+  const response = await axiosClient.post("/auth/resend-otp", { email});
 
   return response.data;
 };
