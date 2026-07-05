@@ -2,6 +2,7 @@ package com.consult.backend.service;
 
 import com.consult.backend.entity.ConsultationRequest;
 import com.consult.backend.entity.Invoice;
+import jakarta.annotation.PostConstruct;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +22,13 @@ public class EmailService {
 
     @Value("${consult21.admin-email}")
     private String adminEmail;
+
+    @PostConstruct
+    public void validateConfig() {
+        if (adminEmail == null || adminEmail.isEmpty()) {
+            throw new IllegalStateException("Admin email not configured");
+        }
+    }
     /*
      =========================================
      SEND OTP EMAIL
@@ -154,11 +162,13 @@ public class EmailService {
                             "Thank you for choosing Consult21."
             );
 
-            if ( invoice.getPdfUrl() != null) {
+            if (invoice.getPdfUrl() != null) {
 
                 FileSystemResource pdf = new FileSystemResource(new File(invoice.getPdfUrl()));
 
-                helper.addAttachment(invoice.getInvoiceNumber() + ".pdf", pdf);
+                if (pdf.exists() && pdf.isFile()) {
+                    helper.addAttachment(invoice.getInvoiceNumber() + ".pdf", pdf);
+                }
             }
 
             mailSender.send(message);

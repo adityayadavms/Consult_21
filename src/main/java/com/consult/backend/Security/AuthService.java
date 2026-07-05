@@ -133,12 +133,7 @@ public class AuthService {
          CONTINUE NORMAL LOGIN FLOW
          ======================================
         */
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        dto.getEmail(),
-                        dto.getPassword()
-                )
-        );
+
 
         User user = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -234,6 +229,7 @@ public class AuthService {
             throw new RuntimeException("Token already revoked");
         }
 
+
         if (token.getExpiryDate().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Refresh token expired");
         }
@@ -248,6 +244,8 @@ public class AuthService {
         // ROTATE — revoke old token
         token.setRevoked(true);
         refreshTokenRepository.save(token);
+
+        redisSessionService.deleteSession(tokenId);
 
         // Create NEW refresh token (also creates new Redis session)
         String newRefreshToken = createRefreshToken(user);
@@ -387,8 +385,7 @@ public class AuthService {
     /*
      STEP 1 — CHECK USER EXISTS
     */
-        userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Email not registered"));
+        userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Email not registered"));
 
         String cooldownKey = COOLDOWN_PREFIX + email;
         String resendKey = RESEND_PREFIX + email;
@@ -430,6 +427,7 @@ public class AuthService {
     /*
      STEP 6 — GENERATE NEW OTP
     */
+        redisTemplate.opsForValue().set(cooldownKey, "LOCKED", COOLDOWN_TIME);
 
         String otp = redisOtpService.generateOtp(email);
 

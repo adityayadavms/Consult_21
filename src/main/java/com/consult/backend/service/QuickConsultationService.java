@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 
 @Service
@@ -23,6 +23,7 @@ public class QuickConsultationService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
 
+    @Transactional
     public QuickConsultationResponseDto createOrder(QuickConsultationRequestDto dto) {
         try {
 

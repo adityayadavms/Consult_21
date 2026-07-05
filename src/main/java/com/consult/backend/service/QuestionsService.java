@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -21,11 +22,8 @@ public class QuestionsService {
     private final QuestionsRepository questionsRepository;
     private final UserRepository userRepository;
 
-    public PaginatedQuestionsResponseDto getMyQuestions(
-            String email,
-            int page,
-            int size
-    ) {
+    @Transactional(readOnly = true)
+    public PaginatedQuestionsResponseDto getMyQuestions(String email, int page, int size) {
 
         // Get logged-in user
         User user = userRepository.findByEmail(email)

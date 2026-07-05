@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -51,7 +52,11 @@ public class InvoiceService {
 
             Path directory = Paths.get("uploads", "invoices");
 
-            Files.createDirectories(directory);
+            try {
+                Files.createDirectories(directory);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to create invoice directory", e);
+            }
 
 
             String filePath = directory.resolve(invoiceNumber + ".pdf").toString();

@@ -48,7 +48,7 @@ public class PaymentService {
     private final InvoiceService invoiceService;
 
     @Transactional
-    public CreateOrderResponseDto createOrderForConsultation(Long consultationId, String userEmail,
+    public synchronized CreateOrderResponseDto createOrderForConsultation(Long consultationId, String userEmail,
             String idempotencyKey
     ) {
 
@@ -59,13 +59,9 @@ public class PaymentService {
             =========================================
             */
 
-            String payload =
-                    consultationId + ":" + userEmail;
+            String payload = consultationId + ":" + userEmail;
 
-            String requestHash =
-                    idempotencyService.generateRequestHash(
-                            payload
-                    );
+            String requestHash = idempotencyService.generateRequestHash(payload);
 
                 /*
                 =========================================
@@ -73,16 +69,12 @@ public class PaymentService {
                 =========================================
                 */
 
-            Optional<IdempotencyKey> existingKey =
-                    idempotencyService.findByKey(
-                            idempotencyKey
-                    );
+            Optional<IdempotencyKey> existingKey = idempotencyService.findByKey(idempotencyKey);
 
 
             if (existingKey.isPresent()) {
 
-                IdempotencyKey stored =
-                        existingKey.get();
+                IdempotencyKey stored = existingKey.get();
 
                 /*
                 =========================================
@@ -90,16 +82,8 @@ public class PaymentService {
                 =========================================
                 */
 
-                if (
-                        !idempotencyService.isDifferentRequest(
-                                stored,
-                                requestHash
-                        )
-                ) {
-
-                    throw new RuntimeException(
-                            "Idempotency key reused with different request"
-                    );
+                if (!idempotencyService.isDifferentRequest(stored, requestHash)) {
+                    throw new RuntimeException("Idempotency key reused with different request");
                 }
 
                 /*
@@ -108,10 +92,7 @@ public class PaymentService {
                 =========================================
                 */
 
-                return objectMapper.readValue(
-                        stored.getResponseBody(),
-                        CreateOrderResponseDto.class
-                );
+                return objectMapper.readValue(stored.getResponseBody(), CreateOrderResponseDto.class);
             }
             /*
             =========================================
@@ -121,11 +102,7 @@ public class PaymentService {
 
             ConsultationRequest consultation = consultationRequestRepository
                            .findById(consultationId)
-                            .orElseThrow(
-                                    () -> new RuntimeException(
-                                            "Consultation not found"
-                                    )
-                            );
+                            .orElseThrow(() -> new RuntimeException("Consultation not found"));
 
 
 
@@ -135,9 +112,7 @@ public class PaymentService {
             =========================================
             */
 
-            if (!consultation.getUser()
-                    .getEmail()
-                    .equals(userEmail)) {
+            if (!consultation.getUser().getEmail().equals(userEmail)) {
 
                 throw new RuntimeException(
                         "Unauthorized access to consultation"
@@ -150,13 +125,8 @@ public class PaymentService {
             =========================================
             */
 
-            if (
-                    consultation.getPaymentOrder() != null
-                            &&
-                            consultation.getPaymentOrder().getStatus()
-                                    == PaymentStatus.PAID
-            )
-            {
+            if (consultation.getPaymentOrder() != null && consultation.getPaymentOrder().getStatus()
+                                    == PaymentStatus.PAID) {
                 throw new RuntimeException(
                         "Consultation already paid"
                 );
@@ -168,11 +138,8 @@ public class PaymentService {
             =========================================
             */
 
-            if (consultation.getPaymentOrder() != null)
-            {
-                throw new RuntimeException(
-                        "Order already created for this consultation"
-                );
+            if (consultation.getPaymentOrder() != null) {
+                throw new RuntimeException("Order already created for this consultation");
             }
 
             /*
@@ -181,13 +148,9 @@ public class PaymentService {
             =========================================
             */
 
-            String internalOrderId =
-                    "PAY_" + UUID.randomUUID();
+            String internalOrderId = "PAY_" + UUID.randomUUID();
 
-            Double amount =
-                    pricingService.calculateAmount(
-                            consultation
-                    );
+            Double amount = pricingService.calculateAmount(consultation);
             // Get user's phone from consultation
             String customerPhone = consultation.getPhone(); // This now contains phone
 
@@ -355,17 +318,16 @@ public class PaymentService {
 
         return switch (status.toUpperCase()) {
 
-            case "PAID" ->
-                    PaymentStatus.PAID;
+            case "PAID" -> PaymentStatus.PAID;
 
-            case "ACTIVE" ->
-                    PaymentStatus.PROCESSING;
+            case "ACTIVE" -> PaymentStatus.PROCESSING;
 
-            case "EXPIRED" ->
-                    PaymentStatus.FAILED;
+            case "EXPIRED" -> PaymentStatus.FAILED;
 
-            case "TERMINATED" ->
-                    PaymentStatus.FAILED;
+            case "TERMINATED" -> PaymentStatus.FAILED;
+
+
+            case "REFUNDED" -> PaymentStatus.REFUNDED;
 
             default ->
                     PaymentStatus.PENDING;
