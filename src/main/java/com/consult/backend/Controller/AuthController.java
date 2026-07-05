@@ -19,7 +19,7 @@ public class AuthController {
             @RequestBody SignupRequestDto dto
     ) {
         return ResponseUtil.success(
-                authService.signup(dto),
+                 authService.signup(dto),
                 "User registered successfully"
         );
     }

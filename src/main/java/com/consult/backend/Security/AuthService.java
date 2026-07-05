@@ -66,6 +66,7 @@ public class AuthService {
         User user = User.builder()
                 .name(dto.getName())
                 .email(dto.getEmail())
+                .phone(dto.getPhone())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .role(Role.USER)
                 .enabled(true)
