@@ -8,7 +8,7 @@ Consult 21 is a full-stack consultation booking and delivery platform that conne
 
 ---
 
-## 📋 Table of Contents
+##  Table of Contents
 
 - [Overview](#overview)
 - [Features](#features)
@@ -24,7 +24,7 @@ Consult 21 is a full-stack consultation booking and delivery platform that conne
 
 ---
 
-## 🎯 Overview
+##  Overview
 
 Consult 21 is designed to democratize access to professional consultation services by offering expert advice in 13 different categories at an extremely affordable price point. The platform employs a modern, scalable architecture with a Spring Boot backend and React.js frontend.
 
@@ -37,7 +37,7 @@ Consult 21 is designed to democratize access to professional consultation servic
 
 ---
 
-## ✨ Features
+##  Features
 
 ### Backend Features
 - **Secure Authentication & Authorization**
@@ -102,7 +102,7 @@ Consult 21 is designed to democratize access to professional consultation servic
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Backend
 | Technology | Version | Purpose |
@@ -137,7 +137,7 @@ Consult 21 is designed to democratize access to professional consultation servic
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 Consult_21/
@@ -183,7 +183,7 @@ Consult_21/
 
 ---
 
-## 📋 Prerequisites
+##  Prerequisites
 
 ### System Requirements
 - **Java Development Kit (JDK):** Version 21 or higher
@@ -200,7 +200,7 @@ Consult_21/
 
 ---
 
-## 🚀 Installation & Setup
+## Installation & Setup
 
 ### 1. Clone the Repository
 ```bash
@@ -259,7 +259,7 @@ npm list
 
 ---
 
-## 🏃 Running the Application
+##  Running the Application
 
 ### Start Backend Server
 ```bash
@@ -301,7 +301,7 @@ npm run lint
 
 ---
 
-## 📚 API Documentation
+##  API Documentation
 
 The backend provides RESTful API endpoints for consultation booking and management.
 
@@ -340,7 +340,7 @@ For detailed API documentation, use API testing tools:
 
 ---
 
-## 📂 Consultation Categories
+##  Consultation Categories
 
 Consult 21 offers expert consultations in 13 specialized domains:
 
@@ -360,18 +360,18 @@ Consult 21 offers expert consultations in 13 specialized domains:
 
 ---
 
-## 🔐 Environment Variables
+##  Environment Variables
 
 ### Backend Configuration
 Create or update `src/main/resources/application.properties`:
 
 ```properties
 # ========== Server Configuration ==========
-server.port=8080
+server.port=you_port
 server.servlet.context-path=/api
 
 # ========== Database ==========
-spring.datasource.url=jdbc:postgresql://localhost:5432/consult_21
+spring.datasource.url= your_db_url
 spring.datasource.username=your_db_username
 spring.datasource.password=your_db_password
 spring.datasource.driver-class-name=org.postgresql.Driver
@@ -385,7 +385,7 @@ app.jwt.refresh-expiration=604800000
 
 # ========== Redis ==========
 spring.redis.host=localhost
-spring.redis.port=6379
+spring.redis.port=your_port
 spring.redis.database=0
 
 # ========== Email Configuration ==========
@@ -439,7 +439,7 @@ Run with specific profile:
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 We welcome contributions! Please follow these steps:
 
@@ -467,22 +467,13 @@ If you find a bug or have a suggestion:
 
 ---
 
-## 📞 Support & Contact
-
-For issues, questions, or suggestions:
-- **GitHub Issues:** [Open an issue](https://github.com/adityayadavms/Consult_21/issues)
-- **Live Application:** [https://consult-21.vercel.app](https://consult-21.vercel.app)
-- **Repository:** [https://github.com/adityayadavms/Consult_21](https://github.com/adityayadavms/Consult_21)
-
----
-
-## 📄 License
+##  License
 
 This project is open source. Usage and distribution follow standard open-source practices.
 
 ---
 
-## 👨‍💼 Author
+##  Author
 
 **Aditya Yadav**
 - GitHub: [@adityayadavms](https://github.com/adityayadavms)
@@ -490,7 +481,7 @@ This project is open source. Usage and distribution follow standard open-source 
 
 ---
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - **Spring Boot Framework** - Robust backend development
 - **React.js** - Modern frontend development
@@ -502,19 +493,3 @@ This project is open source. Usage and distribution follow standard open-source 
 
 ---
 
-## 🚀 Roadmap & Future Enhancements
-
-- [ ] Implement real-time chat consultation
-- [ ] Add video consultation feature
-- [ ] Deploy mobile application (React Native)
-- [ ] Implement advanced analytics dashboard
-- [ ] Add multi-language support
-- [ ] Implement AI-powered recommendation system
-- [ ] Add subscription plans for frequent users
-- [ ] Implement consultant rating and review system
-
----
-
-**Last Updated:** July 5, 2026 | **Version:** 0.0.1-SNAPSHOT
-
-For the latest updates and development progress, visit the [repository](https://github.com/adityayadavms/Consult_21).
