@@ -1,4 +1,5 @@
 package com.consult.backend.Security;
+import com.consult.backend.service.RedisSessionService;
 import com.consult.backend.service.TokenBlacklistService;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -23,7 +24,7 @@ import java.io.IOException;
 public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
-
+    private final RedisSessionService redisSessionService;
     private final TokenBlacklistService blacklistService;
 
     @Qualifier("handlerExceptionResolver")
@@ -48,6 +49,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     || path.contains("/resend-otp")
                     || path.contains("/verify-otp")
                     || path.contains("/reset-password");
+        }
+
+        if (path.startsWith("/api/v1/webhooks")) {
+            return true;
         }
 
         return path.startsWith("/api/v1/public")
@@ -76,28 +81,44 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 return;
             }
 
-            String token = authHeader.substring(7);
 
-            //  CHECK REDIS BLACKLIST
-            if (blacklistService.isBlacklisted(token)) {
-                throw new JwtException("Token is blacklisted");
-            }
+
+            String token = authHeader.substring(7);
 
             // Validate token signature & expiry
             if (!jwtUtil.isTokenValid(token)) {
                 throw new JwtException("Invalid JWT token");
             }
 
+            String tokenId = jwtUtil.extractTokenId(token);
 
-
-            // Ensure token is ACCESS token
             String tokenType = jwtUtil.extractTokenType(token);
-            if (!"ACCESS".equals(tokenType)) {
-                throw new JwtException("Invalid token type");
-            }
 
             // Extract username (email)
             String email = jwtUtil.extractUsername(token);
+
+
+
+            if (!"ACCESS".equals(tokenType)) {
+                throw new JwtException("Invalid token type");
+            }
+            //  CHECK REDIS BLACKLIST
+            if (blacklistService.isBlacklisted(token)) {
+                throw new JwtException("Token is blacklisted");
+
+            }
+
+            if(!redisSessionService.isSessionActive(tokenId)){
+                throw new JwtException("Session Expired or logged out.");
+            }
+
+
+
+
+
+
+
+
 
             // Authenticate only if not already authenticated
             if (email != null &&
