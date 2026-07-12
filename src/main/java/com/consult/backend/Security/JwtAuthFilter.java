@@ -88,7 +88,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 throw new JwtException("Invalid JWT token");
             }
 
-            String tokenId = jwtUtil.extractTokenId(token);
+
 
             String tokenType = jwtUtil.extractTokenType(token);
 
@@ -106,21 +106,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             }
 
-            if(!redisSessionService.isSessionActive(tokenId)){
-                throw new JwtException("Session Expired or logged out.");
-            }
+
 
 
 
             // Authenticate only if not already authenticated
-            if (email != null &&
-                    SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                UserDetails userDetails =
-                        userDetailsService.loadUserByUsername(email);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                                 userDetails,
                                 null,
                                 userDetails.getAuthorities()
