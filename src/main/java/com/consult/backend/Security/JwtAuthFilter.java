@@ -66,9 +66,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     */
     @Override
     protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain
     ) throws ServletException, IOException {
 
         try {
@@ -111,12 +109,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if(!redisSessionService.isSessionActive(tokenId)){
                 throw new JwtException("Session Expired or logged out.");
             }
-
-
-
-
-
-
 
 
 
