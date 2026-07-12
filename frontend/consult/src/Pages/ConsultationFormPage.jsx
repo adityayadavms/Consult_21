@@ -4,13 +4,11 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { getFormTemplateApi } from "../api/formApi";
-import {
-  submitConsultationApi,
-  createPaymentOrderApi
-} from "../api/consultationApi";
+import {submitConsultationApi,createPaymentOrderApi} from "../api/consultationApi";
 import { validateConsultation } from "../utils/validators";
 import { initiateCashfreePayment } from "../utils/cashfree";
 import "./consultation.css";
+import MultiSelectDropdown from "../components/MultiSelectDropdown";
 
 function ConsultationFormPage() {
   const { categoryId } = useParams();
@@ -114,24 +112,14 @@ function ConsultationFormPage() {
         );
 
       case "multiselect":
-        return (
-          <select
-            multiple
-            value={formData[field.key] || []}
-            onChange={(e) =>
-              handleChange(
-                field.key,
-                Array.from(e.target.selectedOptions).map(o => o.value)
-              )
-            }
-          >
-            {field.options?.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </select>
-        );
+      return (
+        <MultiSelectDropdown
+          value={formData[field.key] || []}
+          options={field.options}
+          label={field.label}
+          onChange={(val) => handleChange(field.key, val)}
+        />
+      );
 
       case "file":
         return (
