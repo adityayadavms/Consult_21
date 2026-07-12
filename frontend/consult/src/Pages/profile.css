@@ -1,11 +1,17 @@
 /* src/Pages/profile.css */
 
+/* =========================
+   PROFILE PAGE LAYOUT
+========================= */
 .profile-container {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
 }
 
+/* =========================
+   PROFILE CARD
+========================= */
 .profile-card {
   background: rgba(17, 24, 39, 0.75);
   backdrop-filter: blur(14px);
@@ -15,29 +21,71 @@
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
 }
 
+/* =========================
+   PROFILE HEADER
+========================= */
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.profile-header h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.profile-header .profile-avatar-large {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff6a00, #ff8c42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  flex-shrink: 0;
+}
+
+/* =========================
+   PROFILE FIELDS
+========================= */
 .profile-field {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .profile-field label {
   display: block;
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
   color: #9ca3af;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .profile-value {
   font-size: 16px;
   color: #ffffff;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .profile-email {
   color: #cbd5f5;
-  font-size: 14px;
+  font-size: 15px;
 }
 
+/* =========================
+   PROFILE INPUTS (EDIT MODE)
+========================= */
 .profile-input {
   width: 100%;
   padding: 12px 16px;
@@ -55,68 +103,83 @@
   box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.25);
 }
 
+.profile-input::placeholder {
+  color: #4b5563;
+}
+
+/* =========================
+   PROFILE ACTIONS
+========================= */
 .profile-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 32px;
-  padding-top: 16px;
+  margin-top: 28px;
+  padding-top: 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 12px;
 }
 
 .profile-btn-group {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
+/* =========================
+   BUTTONS
+========================= */
 .profile-btn-primary {
   background: linear-gradient(135deg, #ff6a00, #ff8c42);
   border: none;
-  padding: 12px 24px;
+  padding: 10px 22px;
   border-radius: 10px;
   color: white;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  transition: transform 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .profile-btn-primary:hover {
   transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(255, 106, 0, 0.35);
 }
 
 .profile-btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 .profile-btn-secondary {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 12px 24px;
+  padding: 10px 22px;
   border-radius: 10px;
   color: white;
   font-weight: 500;
   font-size: 14px;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .profile-btn-secondary:hover {
   background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .profile-btn-danger {
   background: transparent;
   border: 1px solid rgba(239, 68, 68, 0.3);
-  padding: 12px 24px;
+  padding: 10px 22px;
   border-radius: 10px;
   color: #ef4444;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .profile-btn-danger:hover {
@@ -124,30 +187,92 @@
   border-color: #ef4444;
 }
 
-/* Mobile Responsive */
+/* =========================
+   SIMPLE LAYOUT OVERRIDE
+   (to hide Consult21 logo)
+========================= */
+.profile-layout .consult-logo {
+  display: none !important;
+}
+
+/* If you want to show "My Profile" in the header instead */
+.profile-layout .consult-header-inner {
+  justify-content: center;
+}
+
+.profile-layout .consult-header-inner .profile-header-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
 @media (max-width: 640px) {
   .profile-container {
-    padding: 16px;
+    padding: 12px;
   }
   
   .profile-card {
-    padding: 24px;
+    padding: 20px;
+    border-radius: 16px;
+  }
+  
+  .profile-header {
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+  }
+  
+  .profile-header h2 {
+    font-size: 18px;
+  }
+  
+  .profile-header .profile-avatar-large {
+    width: 40px;
+    height: 40px;
+    font-size: 15px;
+  }
+  
+  .profile-field {
+    margin-bottom: 16px;
+  }
+  
+  .profile-value {
+    font-size: 15px;
+    padding: 8px 0;
   }
   
   .profile-actions {
     flex-direction: column;
-    gap: 12px;
+    align-items: stretch;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
   }
   
   .profile-btn-group {
     width: 100%;
+    flex-direction: column;
+    gap: 8px;
   }
   
   .profile-btn-group button {
-    flex: 1;
+    width: 100%;
+    justify-content: center;
+    text-align: center;
   }
   
   .profile-btn-danger {
     width: 100%;
+    text-align: center;
+  }
+  
+  .profile-btn-primary,
+  .profile-btn-secondary,
+  .profile-btn-danger {
+    padding: 12px 20px;
+    font-size: 14px;
   }
 }
