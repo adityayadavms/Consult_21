@@ -2,9 +2,8 @@
 
 > **A Digital Consultation Platform for Expert Advice at Affordable Rates**
 
-Consult 21 is a full-stack consultation booking and delivery platform that connects users with expert consultants across 13 specialized domains. Users can book consultations for just ₹21 and receive detailed, professional guidance within 24-48 hours.
+Consult 21 is a full-stack consultation booking and delivery platform that connects users with expert consultants across 12 specialized domains. Users can book consultations for just ₹21 and receive detailed, professional guidance within 24-48 hours.
 
-**Live Demo:** [https://consult-21.vercel.app](https://consult-21.vercel.app)
 
 ---
 
